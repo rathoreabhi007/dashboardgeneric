@@ -1,0 +1,70 @@
+const Footer = () => {
+    return (
+        <footer className="bg-slate-900/50 border-t border-slate-800">
+            <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">About Controls</h3>
+                        <ul className="space-y-2">
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">Overview</a></li>
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">Features</a></li>
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">Documentation</a></li>
+                        </ul>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Team</h3>
+                        <ul className="space-y-2">
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">Leadership</a></li>
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">Engineering</a></li>
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">Support</a></li>
+                        </ul>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Contact</h3>
+                        <ul className="space-y-2">
+                            <li className="text-gray-300">
+                                <span className="text-emerald-400">Email:</span><br />
+                                support@controls.com
+                            </li>
+                            <li className="text-gray-300">
+                                <span className="text-emerald-400">Technical:</span><br />
+                                tech@controls.com
+                            </li>
+                            <li className="text-gray-300">
+                                <span className="text-emerald-400">Sales:</span><br />
+                                sales@controls.com
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">Legal</h3>
+                        <ul className="space-y-2">
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">License</a></li>
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">Privacy Policy</a></li>
+                            <li><a href="#" className="text-gray-300 hover:text-emerald-400 transition-colors">Terms of Service</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="mt-8 border-t border-slate-800 pt-8">
+                    <div className="text-center space-y-4">
+                        <p className="text-gray-400 text-sm">
+                            © {new Date().getFullYear()} Generic Control Dashboard. All rights reserved.
+                        </p>
+                        <p className="text-gray-500 text-xs px-4 max-w-3xl mx-auto">
+                            All content, features, and functionality contained within this dashboard are the exclusive property of Generic Control Dashboard and are protected by international copyright and intellectual property laws. Any unauthorized reproduction, distribution, or modification of the content is strictly prohibited. All trademarks, service marks, and trade names referenced herein are the property of their respective owners.
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                            Version 1.0.0
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    );
+};
+
+export default Footer; 
