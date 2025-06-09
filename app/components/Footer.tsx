@@ -1,6 +1,10 @@
 const Footer = () => {
     return (
-        <footer className="bg-slate-900/50 border-t border-slate-800">
+        <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-t border-slate-800">
+            <div className="absolute inset-0 -z-10 transform-gpu overflow-hidden blur-3xl">
+                <div className="relative aspect-[1155/678] w-full bg-gradient-to-tr from-emerald-400 to-cyan-400 opacity-20" />
+            </div>
+
             <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-4">
