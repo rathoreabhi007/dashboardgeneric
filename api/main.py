@@ -2,12 +2,15 @@ from fastapi import FastAPI, HTTPException
 import time
 from pydantic import BaseModel
 import asyncio
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Any
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 import logging
+import random
+from datetime import datetime
+from enum import Enum
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,95 +39,91 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": str(exc)}
     )
 
-class Numbers(BaseModel):
-    num1: float
-    num2: float
-    num3: float
+class NodeType(str, Enum):
+    CONFIG_SRC = "reading_config_src"
+    OPS_SRC = "reading_ops_src"
+    HARMONISATION_SRC = "harmonisation_src"
+    SRC_ENRICHMENT = "src_enrichment"
+    DATA_TRANSFORM = "data_transform"
+    CONFIG_TGT = "reading_config_tgt"
+    OPS_TGT = "reading_ops_tgt"
+    HARMONISATION_TGT = "harmonisation_tgt"
+    TGT_ENRICHMENT = "tgt_enrichment"
+    TGT_DATA_TRANSFORM = "tgt_data_transform"
+    COMBINE_DATA = "combine_data"
+    APPLY_RULES = "apply_rules"
+    OUTPUT_RULES = "output_rules"
+    BREAK_ROLLING = "break_rolling"
+
+class RunParameters(BaseModel):
+    expectedRunDate: str
+    inputConfigFilePath: str
+    inputConfigFilePattern: str
+    rootFileDir: str
+    runEnv: str
+    tempFilePath: str
+
+class CalculationInput(BaseModel):
+    nodeId: str
+    parameters: RunParameters
+    previousOutputs: Optional[Dict[str, Any]] = None
 
 class ProcessStatus(BaseModel):
     process_id: str
     status: str  # "pending", "running", "completed", "failed", "stopped"
-    result: Optional[float] = None
+    node_id: str
+    output: Optional[Dict] = None
     error: Optional[str] = None
     start_time: float
-    input_numbers: Optional[Dict] = None
+    parameters: Optional[Dict] = None
+
+class ProcessResponse(BaseModel):
+    process_id: str
+    status: str
+    output: Optional[Dict] = None
 
 # Store process information and tasks in memory
 processes: Dict[str, ProcessStatus] = {}
 tasks: Dict[str, asyncio.Task] = {}
 
+# Store process states
+process_states = {}
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Long-Running Calculator API"}
 
-@app.post("/calculate/sum")
-async def start_calculation(numbers: Numbers):
-    # Generate a unique process ID
-    process_id = str(uuid.uuid4())
+@app.post("/run/{node_id}")
+async def run_node(node_id: str, input_data: CalculationInput):
+    process_id = f"{node_id}_{int(time.time() * 1000)}"
     
-    # Store process information
+    logger.info(f"📝 Received calculation request for node {node_id} - Process ID: {process_id}")
+    logger.info("📋 Parameters received:")
+    for key, value in input_data.parameters.dict().items():
+        logger.info(f"  - {key}: {value}")
+    
+    if input_data.previousOutputs:
+        logger.info("📋 Previous outputs received:")
+        for node_id, output in input_data.previousOutputs.items():
+            logger.info(f"  - From node {node_id}: {output}")
+    
+    # Store initial process state
     processes[process_id] = ProcessStatus(
         process_id=process_id,
-        status="pending",
+        status="running",
+        node_id=node_id,
         start_time=time.time(),
-        input_numbers={
-            "num1": numbers.num1,
-            "num2": numbers.num2,
-            "num3": numbers.num3
-        }
+        parameters=input_data.parameters.dict()
     )
-    
-    # Start the calculation in the background
-    task = asyncio.create_task(run_calculation(process_id, numbers))
+
+    # Start the node processing in the background
+    task = asyncio.create_task(process_node_async(process_id, node_id, input_data.parameters, input_data.previousOutputs))
     tasks[process_id] = task
     
     return {
         "process_id": process_id,
-        "message": "Calculation started",
-        "status_endpoint": f"/status/{process_id}"
-    }
-
-@app.post("/stop/{process_id}")
-async def stop_calculation(process_id: str):
-    if process_id not in processes:
-        raise HTTPException(status_code=404, detail="Process not found")
-    
-    if process_id in tasks and not tasks[process_id].done():
-        # Cancel the task
-        tasks[process_id].cancel()
-        try:
-            await tasks[process_id]
-        except asyncio.CancelledError:
-            processes[process_id].status = "stopped"
-            processes[process_id].error = "Process stopped by user"
-        
-        # Clean up
-        del tasks[process_id]
-        
-    return {
-        "process_id": process_id,
-        "message": "Process stopped",
-        "status": processes[process_id].status
-    }
-
-@app.post("/reset/{process_id}")
-async def reset_calculation(process_id: str):
-    if process_id in processes:
-        # Stop the process if it's running
-        if process_id in tasks and not tasks[process_id].done():
-            tasks[process_id].cancel()
-            try:
-                await tasks[process_id]
-            except asyncio.CancelledError:
-                pass
-            del tasks[process_id]
-        
-        # Remove process data
-        del processes[process_id]
-    
-    return {
-        "message": "Process reset successfully",
-        "process_id": process_id
+        "status": "running",
+        "message": f"Node {node_id} processing started"
     }
 
 @app.get("/status/{process_id}")
@@ -138,35 +137,283 @@ async def get_status(process_id: str):
     return {
         "process_id": process_id,
         "status": process.status,
-        "result": process.result,
+        "node_id": process.node_id,
+        "output": process.output,
         "error": process.error,
         "elapsed_time": f"{elapsed_time:.2f} seconds",
-        "input_numbers": process.input_numbers
+        "parameters": process.parameters
     }
 
-async def run_calculation(process_id: str, numbers: Numbers):
+@app.post("/stop/{process_id}")
+async def stop_process(process_id: str):
+    if process_id not in processes:
+        raise HTTPException(status_code=404, detail="Process not found")
+    
+    if process_id in tasks and not tasks[process_id].done():
+        tasks[process_id].cancel()
+        try:
+            await tasks[process_id]
+        except asyncio.CancelledError:
+            processes[process_id].status = "stopped"
+            processes[process_id].error = "Process stopped by user"
+        
+        del tasks[process_id]
+    
+    return {
+        "process_id": process_id,
+        "status": processes[process_id].status,
+        "message": "Process stopped"
+    }
+
+@app.post("/reset/{process_id}")
+async def reset_process(process_id: str):
+    if process_id in processes:
+        if process_id in tasks and not tasks[process_id].done():
+            tasks[process_id].cancel()
+            try:
+                await tasks[process_id]
+            except asyncio.CancelledError:
+                pass
+            del tasks[process_id]
+        
+        del processes[process_id]
+    
+    return {
+        "message": "Process reset successfully",
+        "process_id": process_id
+    }
+
+async def process_node_async(process_id: str, node_id: str, params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None):
     try:
-        # Update status to running
-        processes[process_id].status = "running"
+        # Simulate processing time based on node type
+        processing_time = random.uniform(2, 5)
+        await asyncio.sleep(processing_time)
         
-        # Simulate a long computation (3 minutes)
-        await asyncio.sleep(180)  # 180 seconds = 3 minutes
-        
-        # Perform the calculation
-        result = numbers.num1 + numbers.num2 + numbers.num3
-        
-        # Update process with result
+        output = process_node(node_id, params, previous_outputs)
         processes[process_id].status = "completed"
-        processes[process_id].result = result
+        processes[process_id].output = output
         
-    except asyncio.CancelledError:
-        processes[process_id].status = "stopped"
-        processes[process_id].error = "Process stopped by user"
-        raise
+        logger.info(f"✅ Node {node_id} (Process {process_id}) completed successfully")
+        logger.info(f"📤 Output: {output}")
+        
     except Exception as e:
-        # Update process with error
+        logger.error(f"❌ Error processing node {node_id}: {str(e)}")
         processes[process_id].status = "failed"
         processes[process_id].error = str(e)
+
+def process_node(node_id: str, params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    if "config" in node_id:
+        return process_config_node(params)
+    elif "ops" in node_id:
+        return process_ops_node(params, previous_outputs)
+    elif "harmonisation" in node_id:
+        return process_harmonisation_node(params, previous_outputs)
+    elif "enrichment" in node_id:
+        return process_enrichment_node(params, previous_outputs)
+    elif "transform" in node_id:
+        return process_transform_node(params, previous_outputs)
+    elif node_id == "combine_data":
+        return process_combine_node(params, previous_outputs)
+    elif node_id == "apply_rules":
+        return process_rules_node(params, previous_outputs)
+    elif node_id == "output_rules":
+        return process_output_node(params, previous_outputs)
+    elif node_id == "break_rolling":
+        return process_break_node(params, previous_outputs)
+    else:
+        return process_generic_node(params)
+
+def process_config_node(params: RunParameters) -> Dict:
+    is_valid = validate_config_file(params.inputConfigFilePath, params.inputConfigFilePattern)
+    return {
+        "status": "success" if is_valid else "failed",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting config validation at {datetime.now().isoformat()}",
+            f"Checking file path: {params.inputConfigFilePath}",
+            f"Validating against pattern: {params.inputConfigFilePattern}",
+            f"Environment: {params.runEnv}",
+            "File format validation completed"
+        ],
+        "calculation_results": {
+            "validation_details": {
+                "file_path": params.inputConfigFilePath,
+                "pattern_matched": params.inputConfigFilePattern,
+                "path_format_valid": True,
+                "pattern_format_valid": True
+            },
+            "environment_info": {
+                "run_date": params.expectedRunDate,
+                "environment": params.runEnv,
+                "root_directory": params.rootFileDir
+            }
+        }
+    }
+
+def process_ops_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    has_valid_path = '/' in params.rootFileDir or '\\' in params.rootFileDir
+    
+    # Use config node output if available
+    config_validation = None
+    if previous_outputs and "reading_config_src" in previous_outputs:
+        config_validation = previous_outputs["reading_config_src"].get("calculation_results", {}).get("validation_details")
+    
+    return {
+        "status": "success" if has_valid_path else "failed",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting ops validation at {datetime.now().isoformat()}",
+            f"Checking root directory: {params.rootFileDir}",
+            f"Environment: {params.runEnv}",
+            "Directory validation completed",
+            *(["Using config validation from previous node"] if config_validation else [])
+        ],
+        "calculation_results": {
+            "directory_check": {
+                "path": params.rootFileDir,
+                "is_valid": has_valid_path
+            },
+            "config_validation": config_validation
+        }
+    }
+
+def process_harmonisation_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    return {
+        "status": "success",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting harmonisation at {datetime.now().isoformat()}",
+            f"Processing with environment: {params.runEnv}",
+            "Harmonisation completed"
+        ],
+        "calculation_results": {
+            "harmonisation_info": {
+                "processed_at": datetime.now().isoformat(),
+                "environment": params.runEnv
+            }
+        }
+    }
+
+def process_enrichment_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    return {
+        "status": "success",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting enrichment at {datetime.now().isoformat()}",
+            f"Processing with environment: {params.runEnv}",
+            "Enrichment completed"
+        ],
+        "calculation_results": {
+            "enrichment_info": {
+                "processed_at": datetime.now().isoformat(),
+                "environment": params.runEnv
+            }
+        }
+    }
+
+def process_transform_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    return {
+        "status": "success",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting data transformation at {datetime.now().isoformat()}",
+            f"Processing with environment: {params.runEnv}",
+            "Transformation completed"
+        ],
+        "calculation_results": {
+            "transform_info": {
+                "processed_at": datetime.now().isoformat(),
+                "environment": params.runEnv
+            }
+        }
+    }
+
+def process_combine_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    return {
+        "status": "success",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting data combination at {datetime.now().isoformat()}",
+            f"Processing with environment: {params.runEnv}",
+            "Combination completed"
+        ],
+        "calculation_results": {
+            "combine_info": {
+                "processed_at": datetime.now().isoformat(),
+                "environment": params.runEnv
+            }
+        }
+    }
+
+def process_rules_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    return {
+        "status": "success",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting rules application at {datetime.now().isoformat()}",
+            f"Processing with environment: {params.runEnv}",
+            "Rules applied"
+        ],
+        "calculation_results": {
+            "rules_info": {
+                "processed_at": datetime.now().isoformat(),
+                "environment": params.runEnv
+            }
+        }
+    }
+
+def process_output_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    return {
+        "status": "success",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting output generation at {datetime.now().isoformat()}",
+            f"Processing with environment: {params.runEnv}",
+            "Output generated"
+        ],
+        "calculation_results": {
+            "output_info": {
+                "processed_at": datetime.now().isoformat(),
+                "environment": params.runEnv
+            }
+        }
+    }
+
+def process_break_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    return {
+        "status": "success",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting break rolling at {datetime.now().isoformat()}",
+            f"Processing with environment: {params.runEnv}",
+            "Break rolling completed"
+        ],
+        "calculation_results": {
+            "break_info": {
+                "processed_at": datetime.now().isoformat(),
+                "environment": params.runEnv
+            }
+        }
+    }
+
+def process_generic_node(params: RunParameters) -> Dict:
+    return {
+        "status": "success",
+        "run_parameters": params.dict(),
+        "execution_logs": [
+            f"Starting general processing at {datetime.now().isoformat()}",
+            f"Processing with environment: {params.runEnv}",
+            "Processing completed"
+        ],
+        "calculation_results": {
+            "processed_at": datetime.now().isoformat(),
+            "environment": params.runEnv
+        }
+    }
+
+def validate_config_file(file_path: str, pattern: str) -> bool:
+    # Add your config file validation logic here
+    return True  # Placeholder return
 
 @app.get("/health")
 def health_check():

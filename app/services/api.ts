@@ -15,6 +15,24 @@ export interface ProcessStatus {
     input_numbers?: Record<string, number>;
 }
 
+export interface RunParameters {
+    expectedRunDate: string;
+    inputConfigFilePath: string;
+    inputConfigFilePattern: string;
+    rootFileDir: string;
+    runEnv: string;
+    tempFilePath: string;
+}
+
+export interface CalculationInput {
+    nodeId: string;
+    parameters: RunParameters;
+    previousOutputs?: { [nodeId: string]: any };
+    num1?: number;
+    num2?: number;
+    num3?: number;
+}
+
 export class ApiService {
     static async healthCheck(): Promise<{ status: string, timestamp: number }> {
         const response = await fetch(`${API_BASE_URL}/health`);
@@ -24,21 +42,21 @@ export class ApiService {
         return response.json();
     }
 
-    static async startCalculation(data: CalculationRequest): Promise<{ process_id: string }> {
-        const response = await fetch(`${API_BASE_URL}/calculate/sum`, {
+    static async startCalculation(input: CalculationInput): Promise<{ process_id: string }> {
+        const response = await fetch(`${API_BASE_URL}/run/${input.nodeId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify(input),
         });
         if (!response.ok) {
-            throw new Error('Failed to start calculation');
+            throw new Error(`Failed to start calculation for node ${input.nodeId}`);
         }
         return response.json();
     }
 
-    static async getProcessStatus(processId: string): Promise<ProcessStatus> {
+    static async getProcessStatus(processId: string): Promise<{ status: string; output?: any }> {
         const response = await fetch(`${API_BASE_URL}/status/${processId}`);
         if (!response.ok) {
             throw new Error('Failed to get process status');
@@ -46,7 +64,7 @@ export class ApiService {
         return response.json();
     }
 
-    static async stopProcess(processId: string): Promise<{ message: string }> {
+    static async stopProcess(processId: string): Promise<{ status: string }> {
         const response = await fetch(`${API_BASE_URL}/stop/${processId}`, {
             method: 'POST',
         });
@@ -56,7 +74,7 @@ export class ApiService {
         return response.json();
     }
 
-    static async resetProcess(processId: string): Promise<{ message: string }> {
+    static async resetProcess(processId: string): Promise<{ status: string }> {
         const response = await fetch(`${API_BASE_URL}/reset/${processId}`, {
             method: 'POST',
         });
