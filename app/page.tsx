@@ -60,81 +60,81 @@ export default function Home() {
       <div className="flex flex-col min-h-screen">
         {/* Hero section with reduced padding */}
         <div className="px-6 pt-24 pb-8 sm:pt-32 sm:pb-12 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto max-w-2xl text-center">
             <h1 className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 sm:text-6xl">
-              Generic Control Dashboard
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-300">
-              In House Reconciliation Framework - A comprehensive solution for monitoring and managing reconciliation processes.
-            </p>
-          </div>
+            Generic Control Dashboard
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-gray-300">
+            In House Reconciliation Framework - A comprehensive solution for monitoring and managing reconciliation processes.
+          </p>
         </div>
+      </div>
 
         {/* Features section with adjusted padding */}
         <div id="features" className="mx-auto max-w-7xl px-6 lg:px-8 pb-24">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
-            {/* Feature 1 */}
-            <div
-              onClick={() => openNewInstance('completeness')}
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+          {/* Feature 1 */}
+          <div
+            onClick={() => openNewInstance('completeness')}
               className="group rounded-lg border border-slate-700 p-6 transition-all duration-300 ease-in-out bg-slate-800/50 backdrop-blur-sm hover:bg-slate-800/70 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/10 cursor-pointer transform-gpu"
-            >
+          >
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
                   <FaCheckCircle size={24} />
                 </div>
-                <h3 className="text-lg font-semibold text-emerald-400">GENERIC COMPLETENESS CONTROL</h3>
+            <h3 className="text-lg font-semibold text-emerald-400">GENERIC COMPLETENESS CONTROL</h3>
               </div>
-              <p className="mt-2 text-gray-300">
-                Monitor and verify data completeness across systems, ensuring all required information is present and accurately reconciled.
-              </p>
-            </div>
+            <p className="mt-2 text-gray-300">
+              Monitor and verify data completeness across systems, ensuring all required information is present and accurately reconciled.
+            </p>
+          </div>
 
-            {/* Feature 2 */}
-            <div
-              onClick={() => openNewInstance('quality')}
+          {/* Feature 2 */}
+          <div
+            onClick={() => openNewInstance('quality')}
               className="group rounded-lg border border-slate-700 p-6 transition-all duration-300 ease-in-out bg-slate-800/50 backdrop-blur-sm hover:bg-slate-800/70 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/10 cursor-pointer transform-gpu"
-            >
+          >
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
                   <FaChartLine size={24} />
                 </div>
-                <h3 className="text-lg font-semibold text-emerald-400">GENERIC QUALITY & ASSURANCE CONTROL</h3>
+            <h3 className="text-lg font-semibold text-emerald-400">GENERIC QUALITY & ASSURANCE CONTROL</h3>
               </div>
-              <p className="mt-2 text-gray-300">
-                Ensure data quality and integrity through comprehensive validation checks and quality assurance protocols.
-              </p>
-            </div>
+            <p className="mt-2 text-gray-300">
+              Ensure data quality and integrity through comprehensive validation checks and quality assurance protocols.
+            </p>
+          </div>
 
-            {/* Feature 3 */}
-            <div
-              onClick={() => openNewInstance('batch')}
+          {/* Feature 3 */}
+          <div
+            onClick={() => openNewInstance('batch')}
               className="group rounded-lg border border-slate-700 p-6 transition-all duration-300 ease-in-out bg-slate-800/50 backdrop-blur-sm hover:bg-slate-800/70 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/10 cursor-pointer transform-gpu"
-            >
+          >
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
                   <FaServer size={24} />
                 </div>
-                <h3 className="text-lg font-semibold text-emerald-400">GENERIC BATCH RUN CONTROL</h3>
+            <h3 className="text-lg font-semibold text-emerald-400">GENERIC BATCH RUN CONTROL</h3>
               </div>
-              <p className="mt-2 text-gray-300">
-                Manage and monitor batch processing operations with real-time tracking and execution control capabilities.
-              </p>
-            </div>
+            <p className="mt-2 text-gray-300">
+              Manage and monitor batch processing operations with real-time tracking and execution control capabilities.
+            </p>
+          </div>
 
-            {/* Feature 4 */}
-            <div
-              onClick={() => openNewInstance('config')}
+          {/* Feature 4 */}
+          <div
+            onClick={() => openNewInstance('config')}
               className="group rounded-lg border border-slate-700 p-6 transition-all duration-300 ease-in-out bg-slate-800/50 backdrop-blur-sm hover:bg-slate-800/70 hover:scale-105 hover:shadow-xl hover:shadow-emerald-500/10 cursor-pointer transform-gpu"
-            >
+          >
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
                   <FaCog size={24} />
                 </div>
-                <h3 className="text-lg font-semibold text-emerald-400">GENERIC AUTO CONFIG CHECKER</h3>
+            <h3 className="text-lg font-semibold text-emerald-400">GENERIC AUTO CONFIG CHECKER</h3>
               </div>
-              <p className="mt-2 text-gray-300">
-                Automatically verify and validate system configurations, ensuring alignment with established standards and requirements.
-              </p>
+            <p className="mt-2 text-gray-300">
+              Automatically verify and validate system configurations, ensuring alignment with established standards and requirements.
+            </p>
             </div>
           </div>
         </div>

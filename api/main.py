@@ -40,13 +40,11 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 class NodeType(str, Enum):
-    CONFIG_SRC = "reading_config_src"
-    OPS_SRC = "reading_ops_src"
+    CONFIG_COMP = "reading_config_comp"
+    FILE_SEARCH_COMP = "file_searching_comp"
     HARMONISATION_SRC = "harmonisation_src"
     SRC_ENRICHMENT = "src_enrichment"
     DATA_TRANSFORM = "data_transform"
-    CONFIG_TGT = "reading_config_tgt"
-    OPS_TGT = "reading_ops_tgt"
     HARMONISATION_TGT = "harmonisation_tgt"
     TGT_ENRICHMENT = "tgt_enrichment"
     TGT_DATA_TRANSFORM = "tgt_data_transform"
@@ -115,7 +113,7 @@ async def run_node(node_id: str, input_data: CalculationInput):
         start_time=time.time(),
         parameters=input_data.parameters.dict()
     )
-
+    
     # Start the node processing in the background
     task = asyncio.create_task(process_node_async(process_id, node_id, input_data.parameters, input_data.previousOutputs))
     tasks[process_id] = task
@@ -158,7 +156,7 @@ async def stop_process(process_id: str):
             processes[process_id].error = "Process stopped by user"
         
         del tasks[process_id]
-    
+        
     return {
         "process_id": process_id,
         "status": processes[process_id].status,
@@ -202,10 +200,10 @@ async def process_node_async(process_id: str, node_id: str, params: RunParameter
         processes[process_id].error = str(e)
 
 def process_node(node_id: str, params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
-    if "config" in node_id:
-        return process_config_node(params)
-    elif "ops" in node_id:
-        return process_ops_node(params, previous_outputs)
+    if node_id == "reading_config_comp":
+        return process_config_comp_node(params)
+    elif node_id == "file_searching_comp":
+        return process_file_search_comp_node(params, previous_outputs)
     elif "harmonisation" in node_id:
         return process_harmonisation_node(params, previous_outputs)
     elif "enrichment" in node_id:
@@ -223,24 +221,26 @@ def process_node(node_id: str, params: RunParameters, previous_outputs: Optional
     else:
         return process_generic_node(params)
 
-def process_config_node(params: RunParameters) -> Dict:
+def process_config_comp_node(params: RunParameters) -> Dict:
+    """Process the combined config node that handles both SRC and TGT configurations."""
     is_valid = validate_config_file(params.inputConfigFilePath, params.inputConfigFilePattern)
     return {
         "status": "success" if is_valid else "failed",
         "run_parameters": params.dict(),
         "execution_logs": [
-            f"Starting config validation at {datetime.now().isoformat()}",
+            f"Starting combined config validation at {datetime.now().isoformat()}",
             f"Checking file path: {params.inputConfigFilePath}",
             f"Validating against pattern: {params.inputConfigFilePattern}",
             f"Environment: {params.runEnv}",
-            "File format validation completed"
+            "Combined file format validation completed"
         ],
         "calculation_results": {
             "validation_details": {
                 "file_path": params.inputConfigFilePath,
                 "pattern_matched": params.inputConfigFilePattern,
                 "path_format_valid": True,
-                "pattern_format_valid": True
+                "pattern_format_valid": True,
+                "combined_validation": True
             },
             "environment_info": {
                 "run_date": params.expectedRunDate,
@@ -250,28 +250,34 @@ def process_config_node(params: RunParameters) -> Dict:
         }
     }
 
-def process_ops_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+def process_file_search_comp_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
+    """Process the file searching component that handles both SRC and TGT file operations."""
     has_valid_path = '/' in params.rootFileDir or '\\' in params.rootFileDir
     
     # Use config node output if available
     config_validation = None
-    if previous_outputs and "reading_config_src" in previous_outputs:
-        config_validation = previous_outputs["reading_config_src"].get("calculation_results", {}).get("validation_details")
+    if previous_outputs and "reading_config_comp" in previous_outputs:
+        config_validation = previous_outputs["reading_config_comp"].get("calculation_results", {}).get("validation_details")
     
     return {
         "status": "success" if has_valid_path else "failed",
         "run_parameters": params.dict(),
         "execution_logs": [
-            f"Starting ops validation at {datetime.now().isoformat()}",
+            f"Starting combined file search at {datetime.now().isoformat()}",
             f"Checking root directory: {params.rootFileDir}",
             f"Environment: {params.runEnv}",
-            "Directory validation completed",
+            "File search completed for both SRC and TGT",
             *(["Using config validation from previous node"] if config_validation else [])
         ],
         "calculation_results": {
-            "directory_check": {
-                "path": params.rootFileDir,
-                "is_valid": has_valid_path
+            "file_search_details": {
+                "src_path": f"{params.rootFileDir}/src",
+                "tgt_path": f"{params.rootFileDir}/tgt",
+                "is_valid": has_valid_path,
+                "files_found": {
+                    "src": ["example_src_1.dat", "example_src_2.dat"],
+                    "tgt": ["example_tgt_1.dat", "example_tgt_2.dat"]
+                }
             },
             "config_validation": config_validation
         }

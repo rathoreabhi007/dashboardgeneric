@@ -18,27 +18,43 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { FaCheckCircle, FaTimesCircle, FaSpinner, FaCircle, FaPlay, FaStop, FaUndo, FaChevronLeft, FaFolder, FaGripLines } from 'react-icons/fa';
 import { ApiService } from '@/app/services/api';
-import { RunParameters } from '@/app/types';
 
 // Node status types
-type NodeStatus = 'idle' | 'running' | 'completed' | 'failed';
+type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'standby';
+
+// Add these styles at the top of the file after imports
+const styles = {
+    selectedNode: {
+        border: '2px solid #10b981',
+        boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)',
+        transform: 'scale(1.02)',
+        transition: 'all 0.2s ease'
+    },
+    hoveredNode: {
+        border: '2px solid #10b981',
+        boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.1)',
+        transform: 'scale(1.01)',
+        transition: 'all 0.2s ease'
+    }
+};
 
 const initialNodes: Node[] = [
-    // Top flow nodes
+    // Initial nodes
     {
-        id: 'reading_config_src',
+        id: 'reading_config_comp',
         type: 'custom',
-        data: { fullName: 'Reading_config_SRC', status: 'idle' },
-        position: { x: 50, y: 20 },
+        data: { fullName: 'Reading_Config_Comp', status: 'idle' },
+        position: { x: 50, y: 120 },
         draggable: false
     },
     {
-        id: 'reading_ops_src',
+        id: 'file_searching_comp',
         type: 'custom',
-        data: { fullName: 'Reading_ops_SRC', status: 'idle' },
-        position: { x: 250, y: 20 },
+        data: { fullName: 'File_Searching_Comp', status: 'idle' },
+        position: { x: 250, y: 120 },
         draggable: false
     },
+    // Top flow nodes (SRC)
     {
         id: 'harmonisation_src',
         type: 'custom',
@@ -88,21 +104,7 @@ const initialNodes: Node[] = [
         position: { x: 1450, y: 120 },
         draggable: false
     },
-    // Bottom flow nodes
-    {
-        id: 'reading_config_tgt',
-        type: 'custom',
-        data: { fullName: 'Reading_config_TGT', status: 'idle' },
-        position: { x: 50, y: 220 },
-        draggable: false
-    },
-    {
-        id: 'reading_ops_tgt',
-        type: 'custom',
-        data: { fullName: 'Reading_ops_TGT', status: 'idle' },
-        position: { x: 250, y: 220 },
-        draggable: false
-    },
+    // Bottom flow nodes (TGT)
     {
         id: 'harmonisation_tgt',
         type: 'custom',
@@ -127,24 +129,25 @@ const initialNodes: Node[] = [
 ];
 
 const initialEdges: Edge[] = [
-    // Top flow edges
+    // Initial flow
     {
-        id: 'config-to-ops',
-        source: 'reading_config_src',
-        target: 'reading_ops_src',
-        sourceHandle: 'reading_config_src-source',
-        targetHandle: 'reading_ops_src-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        id: 'config-to-file-search',
+        source: 'reading_config_comp',
+        target: 'file_searching_comp',
+        sourceHandle: 'reading_config_comp-source',
+        targetHandle: 'file_searching_comp-target',
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     },
+    // Top flow edges (SRC)
     {
-        id: 'ops-to-harmonisation',
-        source: 'reading_ops_src',
+        id: 'file-search-to-harmonisation-src',
+        source: 'file_searching_comp',
         target: 'harmonisation_src',
-        sourceHandle: 'reading_ops_src-source',
+        sourceHandle: 'file_searching_comp-source',
         targetHandle: 'harmonisation_src-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     },
     {
         id: 'harmonisation-to-enrichment',
@@ -152,8 +155,8 @@ const initialEdges: Edge[] = [
         target: 'src_enrichment',
         sourceHandle: 'harmonisation_src-source',
         targetHandle: 'src_enrichment-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     },
     {
         id: 'enrichment-to-transform',
@@ -161,8 +164,8 @@ const initialEdges: Edge[] = [
         target: 'data_transform',
         sourceHandle: 'src_enrichment-source',
         targetHandle: 'data_transform-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     },
     {
         id: 'transform-to-combine',
@@ -170,54 +173,18 @@ const initialEdges: Edge[] = [
         target: 'combine_data',
         sourceHandle: 'data_transform-source',
         targetHandle: 'combine_data-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     },
+    // Bottom flow edges (TGT)
     {
-        id: 'combine-to-rules',
-        source: 'combine_data',
-        target: 'apply_rules',
-        sourceHandle: 'combine_data-source',
-        targetHandle: 'apply_rules-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
-    },
-    {
-        id: 'rules-to-output',
-        source: 'apply_rules',
-        target: 'output_rules',
-        sourceHandle: 'apply_rules-source',
-        targetHandle: 'output_rules-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
-    },
-    {
-        id: 'output-to-break',
-        source: 'output_rules',
-        target: 'break_rolling',
-        sourceHandle: 'output_rules-source',
-        targetHandle: 'break_rolling-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
-    },
-    // Bottom flow edges
-    {
-        id: 'config-to-ops-tgt',
-        source: 'reading_config_tgt',
-        target: 'reading_ops_tgt',
-        sourceHandle: 'reading_config_tgt-source',
-        targetHandle: 'reading_ops_tgt-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
-    },
-    {
-        id: 'ops-to-harmonisation-tgt',
-        source: 'reading_ops_tgt',
+        id: 'file-search-to-harmonisation-tgt',
+        source: 'file_searching_comp',
         target: 'harmonisation_tgt',
-        sourceHandle: 'reading_ops_tgt-source',
+        sourceHandle: 'file_searching_comp-source',
         targetHandle: 'harmonisation_tgt-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     },
     {
         id: 'harmonisation-to-enrichment-tgt',
@@ -225,8 +192,8 @@ const initialEdges: Edge[] = [
         target: 'tgt_enrichment',
         sourceHandle: 'harmonisation_tgt-source',
         targetHandle: 'tgt_enrichment-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     },
     {
         id: 'enrichment-to-transform-tgt',
@@ -234,8 +201,8 @@ const initialEdges: Edge[] = [
         target: 'tgt_data_transform',
         sourceHandle: 'tgt_enrichment-source',
         targetHandle: 'tgt_data_transform-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     },
     {
         id: 'transform-to-combine-tgt',
@@ -243,15 +210,72 @@ const initialEdges: Edge[] = [
         target: 'combine_data',
         sourceHandle: 'tgt_data_transform-source',
         targetHandle: 'combine_data-target',
-        animated: true,
-        style: { stroke: '#10b981', strokeWidth: 1 }
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
+    },
+    // Final flow edges
+    {
+        id: 'combine-to-rules',
+        source: 'combine_data',
+        target: 'apply_rules',
+        sourceHandle: 'combine_data-source',
+        targetHandle: 'apply_rules-target',
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
+    },
+    {
+        id: 'rules-to-output',
+        source: 'apply_rules',
+        target: 'output_rules',
+        sourceHandle: 'apply_rules-source',
+        targetHandle: 'output_rules-target',
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
+    },
+    {
+        id: 'output-to-break',
+        source: 'output_rules',
+        target: 'break_rolling',
+        sourceHandle: 'output_rules-source',
+        targetHandle: 'break_rolling-target',
+        animated: false,
+        style: { stroke: '#10b981', strokeWidth: 2 }
     }
 ];
 
-// CustomNode component moved outside
+// Add this type for run parameter validation
+type RunParameterValidation = {
+    isValid: boolean;
+    message: string;
+};
+
+// Add this type for run parameters
+type LocalRunParameters = {
+    expectedRunDate: string;
+    inputConfigFilePath: string;
+    inputConfigFilePattern: string;
+    rootFileDir: string;
+    runEnv: string;
+    tempFilePath: string;
+};
+
+// Update the CustomNode component
 const CustomNode = ({ data, id }: { data: any; id: string }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [showTooltip, setShowTooltip] = useState(false);
     const isRunning = data.status === 'running';
     const canReset = data.status === 'failed' || data.status === 'completed';
+    const isSelected = data.selected || false;
+
+    // Check if the node can run
+    const canRun = data.areParamsApplied && !isRunning;
+
+    // Tooltip message
+    const tooltipMessage = !data.areParamsApplied 
+        ? "Please apply parameters first" 
+        : isRunning 
+            ? "Node is running" 
+            : "Click to run node";
 
     const handlePinClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -260,8 +284,43 @@ const CustomNode = ({ data, id }: { data: any; id: string }) => {
         }
     };
 
+    // Base node style
+    const baseStyle = {
+        transition: 'all 0.2s ease',
+        border: '2px solid transparent',
+        boxShadow: 'none',
+        transform: 'scale(1)'
+    };
+
+    // Compute node style based on state
+    const nodeStyle = {
+        ...baseStyle,
+        ...(isSelected && styles.selectedNode),
+        ...(isHovered && !isSelected && styles.hoveredNode),
+        ...(data.style || {}) // Allow for custom styles from parent
+    };
+
+    // Icon container style with state-based colors
+    const getIconContainerStyle = () => {
+        const baseIconStyle = "w-10 h-10 flex items-center justify-center bg-slate-800/50 rounded-full border shadow-lg transition-all duration-200";
+        
+        if (isSelected || isHovered) {
+            return `${baseIconStyle} border-emerald-400`;
+        }
+        
+        return `${baseIconStyle} border-slate-700`;
+    };
+
     return (
-        <div className="relative flex flex-col items-center">
+        <div 
+            className="relative flex flex-col items-center"
+            style={nodeStyle}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => {
+                setIsHovered(false);
+                setShowTooltip(false);
+            }}
+        >
             <Handle
                 type="target"
                 position={Position.Left}
@@ -269,24 +328,34 @@ const CustomNode = ({ data, id }: { data: any; id: string }) => {
                 id={`${id}-target`}
                 onClick={handlePinClick}
             />
-            <div className="w-10 h-10 flex items-center justify-center bg-slate-800/50 rounded-full border border-slate-700 shadow-lg">
+            <div className={getIconContainerStyle()}>
                 {data.status === 'running' && <FaSpinner className="animate-spin text-yellow-400 w-4 h-4" />}
                 {data.status === 'completed' && <FaCheckCircle className="text-green-400 w-4 h-4" />}
                 {data.status === 'failed' && <FaTimesCircle className="text-red-400 w-4 h-4" />}
+                {data.status === 'standby' && <FaSpinner className="text-blue-400 w-4 h-4" />}
                 {data.status === 'idle' && <FaCircle className="text-white/80 w-4 h-4" />}
             </div>
             <div className="text-[8px] text-slate-400 mt-1 max-w-[80px] text-center">{data.fullName}</div>
             <div className="flex gap-0.5 mt-1">
                 <button
-                    onClick={() => data.onRun?.(id)}
-                    disabled={isRunning}
-                    className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[6px] ${isRunning
-                        ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
-                        : 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
+                    onClick={() => canRun && data.onRun?.(id)}
+                    disabled={!canRun}
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[6px] relative
+                        ${!canRun
+                            ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
+                            : 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
                         }`}
                 >
                     <FaPlay className="w-1 h-1" />
                     Run
+                    {showTooltip && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[6px] 
+                            bg-slate-900 text-white rounded whitespace-nowrap z-50">
+                            {tooltipMessage}
+                        </div>
+                    )}
                 </button>
                 <button
                     onClick={() => data.onStop?.(id)}
@@ -333,32 +402,41 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const [bottomBarHeight, setBottomBarHeight] = useState(96);
     const [isResizingBottom, setIsResizingBottom] = useState(false);
     const [selectedNode, setSelectedNode] = useState<any>(null);
+    const [areParamsApplied, setAreParamsApplied] = useState(false);
     const resizeRef = useRef<HTMLDivElement>(null);
     const minWidth = 48;
     const maxWidth = 800;
     const minHeight = 32;
     const nodeTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
-    const [runParams, setRunParams] = useState({
-        expectedRunDate: new Date().toISOString().split('T')[0],
+    const [runParams, setRunParams] = useState<LocalRunParameters>({
+        expectedRunDate: '',
         inputConfigFilePath: '',
-        inputConfigFilePattern: '*.config',
-        rootFileDir: '/path/to/root',
-        runEnv: 'development',
-        tempFilePath: '/tmp'
+        inputConfigFilePattern: '',
+        rootFileDir: '',
+        runEnv: '',
+        tempFilePath: ''
     });
     const [processIds, setProcessIds] = useState<{ [key: string]: string }>({});
     const [isRunningAll, setIsRunningAll] = useState(false);
     const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
-    const [validatedParams, setValidatedParams] = useState<RunParameters | null>(null);
+    const [validatedParams, setValidatedParams] = useState<LocalRunParameters | null>(null);
     const [nodeOutputs, setNodeOutputs] = useState<{ [nodeId: string]: any }>(() => {
         const savedOutputs = localStorage.getItem('nodeOutputs');
         return savedOutputs ? JSON.parse(savedOutputs) : {};
+    });
+    const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+
+    // Add validation state
+    const [paramValidation, setParamValidation] = useState<RunParameterValidation>({
+        isValid: false,
+        message: 'Please fill all required parameters'
     });
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.map(node => ({
         ...node,
         data: {
             ...node.data,
+            areParamsApplied,
             onPinClick: (data: any) => setSelectedNode(data),
             onRun: async (nodeId: string) => {
                 console.log(`🎯 Starting node ${nodeId}`);
@@ -368,137 +446,155 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     return;
                 }
 
-                // Get parameters from localStorage
+                // Get and validate parameters from localStorage
                 const storedParams = localStorage.getItem('validatedParams');
-                const params = storedParams ? JSON.parse(storedParams) : null;
-
-                if (!params) {
+                if (!storedParams) {
                     console.log('❌ No validated parameters found');
+                    setParamValidation({
+                        isValid: false,
+                        message: 'Please apply parameters before running nodes'
+                    });
                     return;
                 }
 
-                console.log('📝 Run Parameters:', {
-                    expectedRunDate: params.expectedRunDate,
-                    inputConfigFilePath: params.inputConfigFilePath,
-                    inputConfigFilePattern: params.inputConfigFilePattern,
-                    rootFileDir: params.rootFileDir,
-                    runEnv: params.runEnv,
-                    tempFilePath: params.tempFilePath
-                });
-
+                // Parse and validate parameters
                 try {
-                updateNodeStatus(nodeId, 'running');
-
-                    // Get previous node outputs based on connections
-                    const incomingNodes = edges
-                        .filter(edge => edge.target === nodeId)
-                        .map(edge => edge.source);
-                    
-                    console.log('🔍 Current nodeOutputs state:', nodeOutputs);
-                    
-                    // Get latest outputs from localStorage
-                    const savedOutputs = localStorage.getItem('nodeOutputs');
-                    const latestOutputs = savedOutputs ? JSON.parse(savedOutputs) : {};
-                    console.log('📂 Latest outputs from localStorage:', latestOutputs);
-                    
-                    const previousOutputs = incomingNodes.reduce((acc, sourceNodeId) => {
-                        // First try to get from current state
-                        let output = nodeOutputs[sourceNodeId];
-                        
-                        // If not in current state, try localStorage
-                        if (!output && latestOutputs[sourceNodeId]) {
-                            output = latestOutputs[sourceNodeId];
-                            // Update current state with localStorage data
-                            setNodeOutputs(prev => ({
-                                ...prev,
-                                [sourceNodeId]: output
-                            }));
+                    const params = JSON.parse(storedParams) as LocalRunParameters;
+                    const hasEmptyFields = Object.entries(params).some(([key, value]) => {
+                        if (!value || (typeof value === 'string' && value.trim() === '')) {
+                            console.log(`❌ Invalid parameter detected: ${key}`);
+                            return true;
                         }
-                        
-                        if (output) {
-                            acc[sourceNodeId] = output;
-                        }
-                        return acc;
-                    }, {} as { [key: string]: any });
+                        return false;
+                    });
 
-                    // Log incoming connections and their outputs
-                    if (incomingNodes.length > 0) {
-                        console.log('🔄 Previous Node Connections:', incomingNodes);
-                        console.log('📥 Previous Node Outputs:', previousOutputs);
+                    if (hasEmptyFields) {
+                        console.log('❌ Invalid parameters detected');
+                        setParamValidation({
+                            isValid: false,
+                            message: 'Invalid parameters detected. Please apply valid parameters.'
+                        });
+                        localStorage.removeItem('validatedParams');
+                        return;
                     }
 
-                    console.log('🚀 Node Execution - Full Request:', {
+                    // Additional validation for expected date format (YYYY-MM-DD)
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                    if (!dateRegex.test(params.expectedRunDate)) {
+                        console.log('❌ Invalid date format');
+                        setParamValidation({
+                            isValid: false,
+                            message: 'Invalid date format. Use YYYY-MM-DD format.'
+                        });
+                        localStorage.removeItem('validatedParams');
+                        return;
+                    }
+
+                    // Additional validation for paths
+                    if (!params.inputConfigFilePath.includes('/') && !params.inputConfigFilePath.includes('\\')) {
+                        console.log('❌ Invalid config file path');
+                        setParamValidation({
+                            isValid: false,
+                            message: 'Invalid config file path format.'
+                        });
+                        localStorage.removeItem('validatedParams');
+                        return;
+                    }
+
+                    // Validate environment
+                    const validEnvs = ['development', 'staging', 'production'];
+                    if (!validEnvs.includes(params.runEnv.toLowerCase())) {
+                        console.log('❌ Invalid environment');
+                        setParamValidation({
+                            isValid: false,
+                            message: 'Invalid environment. Use development, staging, or production.'
+                        });
+                        localStorage.removeItem('validatedParams');
+                        return;
+                    }
+
+                    console.log('📝 Run Parameters:', params);
+
+                    // Update node status to running
+                    updateNodeStatus(nodeId, 'running');
+
+                    // Get previous outputs
+                    const prevOutputs = { ...nodeOutputs };
+                    console.log('📂 Latest outputs from localStorage:', prevOutputs);
+
+                    // Prepare the request
+                    const request = {
                         nodeId,
                         parameters: params,
-                        previousOutputs,
+                        previousOutputs: prevOutputs,
                         timestamp: new Date().toISOString()
-                    });
+                    };
 
-                    const response = await ApiService.startCalculation({
-                        nodeId,
-                        parameters: params,
-                        previousOutputs
-                    }) as { process_id: string; status: string };
+                    console.log('🚀 Node Execution - Full Request:', request);
 
-                    console.log('📤 Backend Response:', {
-                        processId: response.process_id,
-                        status: response.status,
-                        timestamp: new Date().toISOString()
-                    });
+                    // Start the calculation
+                    const response = await ApiService.startCalculation(request);
+                    console.log('📤 Backend Response:', response);
 
-                    console.log(`✨ Process started with ID: ${response.process_id}`);
-                    setProcessIds(prev => ({ ...prev, [nodeId]: response.process_id }));
+                    if (response.process_id) {
+                        console.log('✨ Process started with ID:', response.process_id);
+                        setProcessIds(prev => ({
+                            ...prev,
+                            [nodeId]: response.process_id
+                        }));
 
-                    const pollInterval = setInterval(async () => {
-                        try {
-                            const status = await ApiService.getProcessStatus(response.process_id);
-                            console.log(`📊 Status update for ${nodeId}:`, {
-                                processId: response.process_id,
-                                status: status.status,
-                                output: status.output,
-                                timestamp: new Date().toISOString()
-                            });
-                            
-                            if (status.status === 'completed' || status.status === 'failed') {
-                                updateNodeStatus(nodeId, status.status as NodeStatus);
-                                clearInterval(pollInterval);
-                                console.log(`✅ Process ${response.process_id} finished with status: ${status.status}`);
-                                
-                                if (status.output) {
-                                    console.log(`📦 Node ${nodeId} Output:`, status.output);
+                        // Set up polling for status
+                        const pollInterval = setInterval(async () => {
+                            try {
+                                const status = await ApiService.getProcessStatus(response.process_id);
+                                console.log(`📊 Status update for ${nodeId}:`, status);
+
+                                if (status.status === 'completed' || status.status === 'failed') {
+                                    updateNodeStatus(nodeId, status.status);
+                                    console.log(`✅ Process ${response.process_id} finished with status: ${status.status}`);
+                                    clearInterval(pollInterval);
                                     
-                                    // Update nodeOutputs state and localStorage atomically
-                                    const newOutput = status.output;
-                                    setNodeOutputs(prev => {
-                                        const updated = {
-                                            ...prev,
-                                            [nodeId]: newOutput
-                                        };
-                                        // Save to localStorage immediately
-                                        localStorage.setItem('nodeOutputs', JSON.stringify(updated));
-                                        console.log('🔄 Updated nodeOutputs state and localStorage:', updated);
-                                        return updated;
-                                    });
-                                    
-                                    // Update node data with output
-                                    setNodes(nds => nds.map(n => 
-                                        n.id === nodeId 
-                                            ? { ...n, data: { ...n.data, output: status.output } }
-                                            : n
-                                    ));
+                                    if (status.output) {
+                                        console.log(`📦 Node ${nodeId} Output:`, status.output);
+                                        
+                                        // Update nodeOutputs state and localStorage atomically
+                                        const newOutput = status.output;
+                                        setNodeOutputs(prev => {
+                                            const updated = {
+                                                ...prev,
+                                                [nodeId]: newOutput
+                                            };
+                                            // Save to localStorage immediately
+                                            localStorage.setItem('nodeOutputs', JSON.stringify(updated));
+                                            console.log('🔄 Updated nodeOutputs state and localStorage:', updated);
+                                            return updated;
+                                        });
+                                        
+                                        // Update node data with output
+                                        setNodes(nds => nds.map(n => 
+                                            n.id === nodeId 
+                                                ? { ...n, data: { ...n.data, output: status.output } }
+                                                : n
+                                        ));
+                                    }
                                 }
+                            } catch (error) {
+                                console.error('❌ Error polling status:', error);
+                                updateNodeStatus(nodeId, 'failed');
+                                clearInterval(pollInterval);
                             }
-                        } catch (error) {
-                            console.error('❌ Error polling status:', error);
-                            updateNodeStatus(nodeId, 'failed');
-                            clearInterval(pollInterval);
-                        }
-                    }, 1000);
+                        }, 1000);
 
-                    nodeTimeouts.current[nodeId] = pollInterval as any;
+                        nodeTimeouts.current[nodeId] = pollInterval as any;
+                    }
                 } catch (error) {
-                    console.error('❌ Error starting calculation:', error);
-                    updateNodeStatus(nodeId, 'failed');
+                    console.error('❌ Error parsing parameters:', error);
+                    setParamValidation({
+                        isValid: false,
+                        message: 'Invalid parameter format detected.'
+                    });
+                    localStorage.removeItem('validatedParams');
+                    return;
                 }
             },
             onStop: async (nodeId: string) => {
@@ -607,66 +703,167 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         }
     };
 
-    const validateParams = () => {
+    const validateRunParameters = useCallback(() => {
         const newInvalidFields = new Set<string>();
+        let hasErrors = false;
         
-        // Simple validation - just check if fields are non-empty strings
+        // Check each parameter for empty or whitespace-only values
         Object.entries(runParams).forEach(([key, value]) => {
-            if (!value || value.trim() === '') {
+            if (!value || (typeof value === 'string' && value.trim() === '')) {
                 newInvalidFields.add(key);
+                hasErrors = true;
+                console.log(`❌ Validation Error: ${key} is empty or contains only whitespace`);
             }
         });
-
+        
         setInvalidFields(newInvalidFields);
-        const isValid = newInvalidFields.size === 0;
-        console.log('Validation result:', isValid, 'Parameters:', runParams);
         
-        if (isValid) {
+        setParamValidation({
+            isValid: !hasErrors,
+            message: hasErrors ? 'Please fill in all required fields' : 'Parameters are valid'
+        });
+
+        if (!hasErrors) {
+            console.log('✅ All parameters are valid:', runParams);
             localStorage.setItem('validatedParams', JSON.stringify(runParams));
-            setValidatedParams(runParams);
+            setAreParamsApplied(true);
         } else {
             localStorage.removeItem('validatedParams');
-            setValidatedParams(null);
+            setAreParamsApplied(false);
         }
         
-        return isValid;
+        return !hasErrors;
+    }, [runParams]);
+
+    const handleApplyParams = useCallback(() => {
+        const isValid = validateRunParameters();
+        if (!isValid) {
+            console.log('⚠️ Parameter validation failed. Please check highlighted fields.');
+            setAreParamsApplied(false);
+            return false;
+        }
+        setAreParamsApplied(true);
+        return true;
+    }, [validateRunParameters]);
+
+    // Update the getInputStyle function to use emerald text color
+    const getInputStyle = (fieldName: string) => {
+        const baseStyle = "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors";
+        return invalidFields.has(fieldName)
+            ? `${baseStyle} border-red-500 bg-red-50 focus:ring-red-200 text-red-500`
+            : `${baseStyle} border-gray-300 focus:ring-emerald-200 text-emerald-500 placeholder-emerald-300`;
     };
 
-    const handleApplyParams = () => {
-        if (validateParams()) {
-            console.log('Parameters are valid:', runParams);
-            // Store in localStorage when applying
-            localStorage.setItem('validatedParams', JSON.stringify(runParams));
-            setValidatedParams(runParams);
-        } else {
-            console.log('Parameter validation failed');
-            localStorage.removeItem('validatedParams');
-            setValidatedParams(null);
-        }
-    };
+    // Parameter input fields JSX
+    const renderParameterInputs = () => (
+        <div className="space-y-4">
+            {Object.entries(runParams).map(([key, value]) => (
+                <div key={key} className="flex flex-col">
+                    <label className="text-sm font-bold text-white mb-1">
+                        {key}
+                        {invalidFields.has(key) && (
+                            <span className="text-red-500 ml-1">*</span>
+                        )}
+                    </label>
+                    {key === 'runEnv' ? (
+                        <select
+                            value={value || ''}
+                            onChange={(e) => handleParamChange(key, e.target.value)}
+                            className={`${getInputStyle(key)} ${!value ? 'text-emerald-300' : 'text-emerald-500'}`}
+                        >
+                            <option value="" className="text-emerald-300">Select Environment</option>
+                            <option value="development" className="text-emerald-500">Development</option>
+                            <option value="staging" className="text-emerald-500">Staging</option>
+                            <option value="production" className="text-emerald-500">Production</option>
+                        </select>
+                    ) : (
+                        <input
+                            type="text"
+                            value={value || ''}
+                            onChange={(e) => handleParamChange(key, e.target.value)}
+                            className={getInputStyle(key)}
+                            onFocus={() => {
+                                if (invalidFields.has(key)) {
+                                    const newInvalidFields = new Set(invalidFields);
+                                    newInvalidFields.delete(key);
+                                    setInvalidFields(newInvalidFields);
+                                }
+                            }}
+                            placeholder={`Enter ${key}`}
+                        />
+                    )}
+                    {invalidFields.has(key) && (
+                        <p className="mt-1 text-sm text-red-500">
+                            This field is required
+                        </p>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+
+    // Function to reset all nodes
+    const resetAllNodes = useCallback(() => {
+        // Clear all node outputs from localStorage
+        localStorage.removeItem('nodeOutputs');
+        setNodeOutputs({});
+
+        // Reset all process IDs
+        setProcessIds({});
+
+        // Reset all node statuses to idle and clear all visual states
+        setNodes(nds => nds.map(node => ({
+            ...node,
+            data: {
+                ...node.data,
+                status: 'idle',
+                output: undefined,
+                selected: false,
+                style: undefined // Clear any custom styles
+            },
+            style: undefined, // Clear node-level styles
+            selected: false // Clear ReactFlow's internal selection state
+        })));
+
+        // Clear any running timeouts
+        Object.values(nodeTimeouts.current).forEach(timeout => {
+            clearInterval(timeout as NodeJS.Timeout);
+        });
+        nodeTimeouts.current = {};
+
+        // Clear selected nodes
+        setSelectedNodes(new Set());
+        
+        // Clear selected node in output panel
+        setSelectedNode(null);
+
+        console.log('🧹 Reset all nodes and cleared all data');
+    }, [setNodes]);
 
     // Function to run nodes in sequence
     const runAllNodes = async () => {
+        if (!areParamsApplied) {
+            console.log('❌ Cannot run all nodes: Parameters have not been applied');
+            return;
+        }
+
         // Get parameters from localStorage
         const storedParams = localStorage.getItem('validatedParams');
-        const params = storedParams ? JSON.parse(storedParams) : null;
-
-        if (!params) {
-            console.log('No validated parameters available');
+        if (!storedParams) {
+            console.log('❌ Cannot run all nodes: No validated parameters found');
+            setAreParamsApplied(false);
             return;
         }
 
         setIsRunningAll(true);
         const nodeSequence = [
             // Top flow
-            'reading_config_src',
-            'reading_ops_src',
+            'reading_config_comp',
+            'file_searching_comp',
             'harmonisation_src',
             'src_enrichment',
             'data_transform',
             // Bottom flow
-            'reading_config_tgt',
-            'reading_ops_tgt',
             'harmonisation_tgt',
             'tgt_enrichment',
             'tgt_data_transform',
@@ -745,37 +942,208 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         console.log('🧹 Cleared all node outputs');
     }, []);
 
+    // Add node selection handler
+    const onSelectionChange = useCallback(({ nodes }: { nodes: Node[] }) => {
+        const selectedIds = new Set(nodes.map(n => n.id));
+        setSelectedNodes(selectedIds as Set<string>);
+        
+        // Update nodes with selection state
+        setNodes(nds => nds.map(node => ({
+            ...node,
+            data: {
+                ...node.data,
+                selected: selectedIds.has(node.id)
+            }
+        })));
+    }, [setNodes]);
+
+    // Update the node run function
+    const runNode = async (nodeId: string) => {
+        // Check if parameters have been applied
+        if (!areParamsApplied) {
+            console.log('❌ Cannot run node: Parameters have not been applied');
+            return;
+        }
+
+        // Get parameters from localStorage
+        const storedParams = localStorage.getItem('validatedParams');
+        if (!storedParams) {
+            console.log('❌ Cannot run node: No validated parameters found');
+            setAreParamsApplied(false);
+            return;
+        }
+
+        // Validate stored parameters
+        try {
+            const params = JSON.parse(storedParams) as LocalRunParameters;
+            const hasEmptyFields = Object.values(params).some(value => 
+                !value || (typeof value === 'string' && value.trim() === '')
+            );
+            
+            if (hasEmptyFields) {
+                console.log('❌ Cannot run node: Invalid parameters detected');
+                setAreParamsApplied(false);
+                localStorage.removeItem('validatedParams');
+                return;
+            }
+
+            // Find all upstream nodes
+            const upstreamNodes = new Set<string>();
+            const findUpstreamNodes = (currentId: string) => {
+                edges.forEach(edge => {
+                    if (edge.target === currentId) {
+                        upstreamNodes.add(edge.source);
+                        findUpstreamNodes(edge.source);
+                    }
+                });
+            };
+            findUpstreamNodes(nodeId);
+
+            // Check if all upstream nodes are completed
+            const allUpstreamCompleted = Array.from(upstreamNodes).every(id => {
+                const node = nodes.find(n => n.id === id);
+                return node?.data.status === 'completed';
+            });
+
+            if (!allUpstreamCompleted) {
+                console.log('⏳ Node in standby: Waiting for upstream nodes to complete');
+                updateNodeStatus(nodeId, 'standby');
+                return;
+            }
+
+            // Proceed with node execution
+            console.log(`🎯 Starting node ${nodeId}`);
+            const currentNode = nodes.find(n => n.id === nodeId);
+            if (currentNode?.data.status === 'running') {
+                console.log('⚠️ Node is already running');
+                return;
+            }
+
+            // Update node status to running
+            updateNodeStatus(nodeId, 'running');
+
+            // Get previous outputs
+            const prevOutputs = { ...nodeOutputs };
+            console.log('📂 Latest outputs from localStorage:', prevOutputs);
+
+            // Prepare the request
+            const request = {
+                nodeId,
+                parameters: params,
+                previousOutputs: prevOutputs,
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('🚀 Node Execution - Full Request:', request);
+
+            // Start the calculation
+            const response = await ApiService.startCalculation(request);
+            console.log('📤 Backend Response:', response);
+
+            if (response.process_id) {
+                console.log('✨ Process started with ID:', response.process_id);
+                setProcessIds(prev => ({
+                    ...prev,
+                    [nodeId]: response.process_id
+                }));
+
+                // Set up polling for status
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const status = await ApiService.getProcessStatus(response.process_id);
+                        console.log('📊 Status update for ' + nodeId + ':', status);
+
+                        if (status.status === 'completed' || status.status === 'failed') {
+                            clearInterval(pollInterval);
+                            updateNodeStatus(nodeId, status.status);
+                            
+                            if (status.status === 'completed' && status.output) {
+                                console.log('📦 Node ' + nodeId + ' Output:', status.output);
+                                setNodeOutputs(prev => {
+                                    const updated = {
+                                        ...prev,
+                                        [nodeId]: status.output
+                                    };
+                                    localStorage.setItem('nodeOutputs', JSON.stringify(updated));
+                                    console.log('🔄 Updated nodeOutputs state and localStorage:', updated);
+                                    return updated;
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        console.error('❌ Error polling status:', error);
+                        clearInterval(pollInterval);
+                        updateNodeStatus(nodeId, 'failed');
+                    }
+                }, 1000);
+
+                nodeTimeouts.current[nodeId] = pollInterval;
+            }
+        } catch (error) {
+            console.error('❌ Error running node:', error);
+            updateNodeStatus(nodeId, 'failed');
+        }
+    };
+
+    // Add a global message when parameters haven't been applied
+    const GlobalMessage = () => {
+        if (!areParamsApplied) {
+            return (
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 
+                    bg-slate-900/90 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
+                    Fill and apply parameters to begin execution
+                </div>
+            );
+        }
+        return null;
+    };
+
+    // Update nodes when areParamsApplied changes
+    useEffect(() => {
+        setNodes(nodes => nodes.map(node => ({
+            ...node,
+            data: {
+                ...node.data,
+                areParamsApplied
+            }
+        })));
+    }, [areParamsApplied, setNodes]);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            <GlobalMessage />
             {/* Main Content */}
             <div className="relative flex flex-col h-screen">
                 <div className="flex-1 relative" style={{ height: `calc(100vh - ${bottomBarHeight}px)` }}>
-                    <div className="flex-1">
+            <div className="flex-1">
                         <div className="bg-slate-800/50 border-b border-slate-700/50 p-4">
                             <div className="flex justify-center">
                                 <h1 className="text-2xl font-semibold text-emerald-400">
                                     Generic Completeness Control
-                                </h1>
-                            </div>
-                        </div>
+                        </h1>
+                    </div>
+                </div>
 
                         <div className="h-[calc(100vh-96px-4rem)]">
-                            <ReactFlow
-                                nodes={nodes}
-                                edges={edges}
-                                onNodesChange={onNodesChange}
-                                onEdgesChange={onEdgesChange}
-                                onConnect={onConnect}
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onConnect={onConnect}
                                 nodeTypes={nodeTypes}
-                                connectionMode={ConnectionMode.Loose}
-                                fitView
-                                minZoom={0.5}
-                                maxZoom={2}
+                        connectionMode={ConnectionMode.Loose}
+                        fitView
+                        minZoom={0.5}
+                        maxZoom={2}
                                 nodesDraggable={false}
                                 panOnDrag={false}
                                 zoomOnScroll={false}
                                 preventScrolling={true}
                                 className="bg-slate-900"
+                                selectNodesOnDrag={false}
+                                onSelectionChange={onSelectionChange}
+                                multiSelectionKeyCode="Control"
                             >
                                 <Background 
                                     color="#475569"
@@ -783,26 +1151,26 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                     className="bg-slate-900"
                                 />
                                 <Controls className="bg-slate-800 border border-slate-700/50 rounded-lg" />
-                            </ReactFlow>
+                    </ReactFlow>
                         </div>
-                    </div>
                 </div>
+            </div>
 
                 {/* Bottom Output Bar with Resize Handle */}
                 <div className="relative">
-                    {/* Resize Handle */}
-                    <div
-                        className={`
+            {/* Resize Handle */}
+            <div
+                className={`
                             absolute top-0 left-0 w-full h-1 cursor-row-resize z-10
                             ${isResizingBottom ? 'bg-emerald-500' : 'bg-transparent hover:bg-emerald-500/30'}
-                            transition-colors
-                        `}
-                        onMouseDown={(e) => {
-                            e.preventDefault();
+                    transition-colors
+                `}
+                onMouseDown={(e) => {
+                    e.preventDefault();
                             setIsResizingBottom(true);
-                        }}
-                    >
-                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                }}
+            >
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                             <FaGripLines className="text-emerald-400/70" />
                         </div>
                     </div>
@@ -946,154 +1314,28 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     <div className="p-6 text-slate-300 overflow-y-auto max-h-[calc(100vh-4rem)]">
                         <div className="space-y-6">
                             {/* Form fields with updated styling */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-emerald-400/90">
-                                    Expected Run Date
-                                </label>
-                                <input
-                                    type="text"
-                                    value={runParams.expectedRunDate}
-                                    onChange={(e) => handleParamChange('expectedRunDate', e.target.value)}
-                                    placeholder="YYYY-MM-DD"
-                                    className={`w-full px-4 py-2.5 bg-slate-800/50 border rounded-lg text-sm 
-                                    transition-colors hover:border-slate-600/50
-                                    ${invalidFields.has('expectedRunDate')
-                                        ? 'border-red-500/50 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50'
-                                        : 'border-slate-700/50 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50'
-                                    }`}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-emerald-400/90">
-                                    Input Config File Path
-                                </label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={runParams.inputConfigFilePath}
-                                        onChange={(e) => handleParamChange('inputConfigFilePath', e.target.value)}
-                                        className={`flex-1 px-4 py-2.5 bg-slate-800/50 border rounded-lg text-sm 
-                                        transition-colors hover:border-slate-600/50
-                                        ${invalidFields.has('inputConfigFilePath')
-                                            ? 'border-red-500/50 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50'
-                                            : 'border-slate-700/50 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50'
-                                        }`}
-                                        placeholder="/path/to/config"
-                                    />
-                                    <button
-                                        className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors
-                                        border border-slate-700/50 hover:border-slate-600/50 group"
-                                        title="Browse"
-                                    >
-                                        <FaFolder className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Input Config File Pattern */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-emerald-400/90">
-                                    Input Config File Pattern
-                                </label>
-                                <input
-                                    type="text"
-                                    value={runParams.inputConfigFilePattern}
-                                    onChange={(e) => handleParamChange('inputConfigFilePattern', e.target.value)}
-                                    className={`w-full px-4 py-2.5 bg-slate-800/50 border rounded-lg text-sm 
-                                    transition-colors hover:border-slate-600/50
-                                    ${invalidFields.has('inputConfigFilePattern')
-                                        ? 'border-red-500/50 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50'
-                                        : 'border-slate-700/50 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50'
-                                    }`}
-                                    placeholder="*.config"
-                                />
-                            </div>
-
-                            {/* Root File Directory */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-emerald-400/90">
-                                    Root File Directory
-                                </label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={runParams.rootFileDir}
-                                        onChange={(e) => handleParamChange('rootFileDir', e.target.value)}
-                                        className={`flex-1 px-4 py-2.5 bg-slate-800/50 border rounded-lg text-sm 
-                                        transition-colors hover:border-slate-600/50
-                                        ${invalidFields.has('rootFileDir')
-                                            ? 'border-red-500/50 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50'
-                                            : 'border-slate-700/50 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50'
-                                        }`}
-                                        placeholder="/path/to/root"
-                                    />
-                                    <button
-                                        className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors
-                                        border border-slate-700/50 hover:border-slate-600/50 group"
-                                        title="Browse"
-                                    >
-                                        <FaFolder className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Run Environment */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-emerald-400/90">
-                                    Run Environment
-                                </label>
-                                <select
-                                    value={runParams.runEnv}
-                                    onChange={(e) => handleParamChange('runEnv', e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-lg text-sm 
-                                    focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-colors
-                                    hover:border-slate-600/50"
-                                >
-                                    <option value="development">Development</option>
-                                    <option value="staging">Staging</option>
-                                    <option value="production">Production</option>
-                                </select>
-                            </div>
-
-                            {/* Temp Filepath */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-emerald-400/90">
-                                    Temp Filepath
-                                </label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={runParams.tempFilePath}
-                                        onChange={(e) => handleParamChange('tempFilePath', e.target.value)}
-                                        className={`flex-1 px-4 py-2.5 bg-slate-800/50 border rounded-lg text-sm 
-                                        transition-colors hover:border-slate-600/50
-                                        ${invalidFields.has('tempFilePath')
-                                            ? 'border-red-500/50 focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50'
-                                            : 'border-slate-700/50 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50'
-                                        }`}
-                                        placeholder="/tmp"
-                                    />
-                                    <button
-                                        className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors
-                                        border border-slate-700/50 hover:border-slate-600/50 group"
-                                        title="Browse"
-                                    >
-                                        <FaFolder className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300" />
-                                    </button>
-                                </div>
+                            <div className="space-y-4">
+                                {renderParameterInputs()}
                             </div>
 
                             {/* Buttons Container */}
                             <div className="pt-6 flex gap-4">
                                 <button
                                     onClick={handleApplyParams}
-                                    className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm 
+                                    className={`flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm 
                                     font-medium transition-colors shadow-lg shadow-emerald-900/20 focus:ring-2 
-                                    focus:ring-emerald-500/50 active:transform active:scale-[0.98]"
+                                    focus:ring-emerald-500/50 active:transform active:scale-[0.98]`}
                                 >
                                     Apply Parameters
                                 </button>
+                                {/* Validation Message */}
+                                {paramValidation.message && (
+                                    <p className={`mt-2 text-sm ${
+                                        paramValidation.isValid ? 'text-emerald-400' : 'text-red-400'
+                                    }`}>
+                                        {paramValidation.message}
+                                    </p>
+                                )}
                                 <button
                                     onClick={runAllNodes}
                                     disabled={isRunningAll}
@@ -1110,7 +1352,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             {/* Reset All Button */}
                             <div className="pt-2">
                                 <button
-                                    onClick={resetAllNodeOutputs}
+                                    onClick={resetAllNodes}
                                     className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm 
                                     font-medium transition-colors shadow-lg shadow-slate-900/20 focus:ring-2 
                                     focus:ring-slate-500/50 active:transform active:scale-[0.98]"
