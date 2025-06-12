@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, createContext, useContext, memo } from 'react';
 import ReactFlow, {
     Node,
     Edge,
@@ -18,6 +18,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { FaCheckCircle, FaTimesCircle, FaSpinner, FaCircle, FaPlay, FaStop, FaUndo, FaChevronLeft, FaFolder, FaGripLines } from 'react-icons/fa';
 import { ApiService } from '@/app/services/api';
+import { buildDependencyMap, buildDownstreamMap, runNodeWithDependencies, getAllDownstreamNodes } from '@/app/utils/graph-utils';
+import { HandlerContext, HandlerContextType } from '@/app/controls/completeness/HandlerContext';
 
 // Node status types
 type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'standby';
@@ -259,29 +261,32 @@ type LocalRunParameters = {
     tempFilePath: string;
 };
 
-// Update the CustomNode component
-const CustomNode = ({ data, id }: { data: any; id: string }) => {
+// Define the CustomNode component outside the main component
+const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: { 
+    data: any; 
+    id: string;
+    nodeOutputs: { [key: string]: any };
+    setSelectedNode: (node: any) => void;
+}) => {
+    const { runNode, resetNodeAndDownstream } = useContext(HandlerContext) as HandlerContextType;
     const [isHovered, setIsHovered] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
     const isRunning = data.status === 'running';
     const canReset = data.status === 'failed' || data.status === 'completed';
     const isSelected = data.selected || false;
-
-    // Check if the node can run
     const canRun = data.areParamsApplied && !isRunning;
 
-    // Tooltip message
-    const tooltipMessage = !data.areParamsApplied 
-        ? "Please apply parameters first" 
-        : isRunning 
-            ? "Node is running" 
-            : "Click to run node";
-
-    const handlePinClick = (e: React.MouseEvent) => {
+    const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (data.onPinClick) {
-            data.onPinClick(data);
-        }
+        // When a node is clicked, set it as selected with its output
+        const output = nodeOutputs[id];
+        setSelectedNode({
+            id,
+            data: {
+                ...data,
+                output
+            }
+        });
     };
 
     // Base node style
@@ -320,32 +325,34 @@ const CustomNode = ({ data, id }: { data: any; id: string }) => {
                 setIsHovered(false);
                 setShowTooltip(false);
             }}
+            onClick={handleClick}
         >
             <Handle
                 type="target"
                 position={Position.Left}
                 style={{ background: '#10b981', width: '8px', height: '8px', cursor: 'pointer' }}
                 id={`${id}-target`}
-                onClick={handlePinClick}
             />
             <div className={getIconContainerStyle()}>
                 {data.status === 'running' && <FaSpinner className="animate-spin text-yellow-400 w-4 h-4" />}
                 {data.status === 'completed' && <FaCheckCircle className="text-green-400 w-4 h-4" />}
                 {data.status === 'failed' && <FaTimesCircle className="text-red-400 w-4 h-4" />}
-                {data.status === 'standby' && <FaSpinner className="text-blue-400 w-4 h-4" />}
-                {data.status === 'idle' && <FaCircle className="text-white/80 w-4 h-4" />}
+                {data.status === 'standby' && <FaCircle className="text-white/80 w-4 h-4" />}
             </div>
             <div className="text-[8px] text-slate-400 mt-1 max-w-[80px] text-center">{data.fullName}</div>
             <div className="flex gap-0.5 mt-1">
                 <button
-                    onClick={() => canRun && data.onRun?.(id)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        canRun && runNode(id);
+                    }}
                     disabled={!canRun}
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
                     className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[6px] relative
                         ${!canRun
-                            ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
-                            : 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
+                        ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
+                        : 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
                         }`}
                 >
                     <FaPlay className="w-1 h-1" />
@@ -353,12 +360,15 @@ const CustomNode = ({ data, id }: { data: any; id: string }) => {
                     {showTooltip && (
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[6px] 
                             bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            {tooltipMessage}
+                            {canRun ? "Click to run node" : "Node is running"}
                         </div>
                     )}
                 </button>
                 <button
-                    onClick={() => data.onStop?.(id)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        data.onStop?.(id);
+                    }}
                     disabled={!isRunning}
                     className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[6px] ${!isRunning
                         ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
@@ -369,7 +379,10 @@ const CustomNode = ({ data, id }: { data: any; id: string }) => {
                     Stop
                 </button>
                 <button
-                    onClick={() => data.onReset?.(id)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        resetNodeAndDownstream(id);
+                    }}
                     disabled={!canReset && !isRunning}
                     className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[6px] ${!canReset && !isRunning
                         ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
@@ -386,14 +399,10 @@ const CustomNode = ({ data, id }: { data: any; id: string }) => {
                 position={Position.Right}
                 style={{ background: '#10b981', width: '8px', height: '8px', cursor: 'pointer' }}
                 id={`${id}-source`}
-                onClick={handlePinClick}
             />
         </div>
     );
-};
-
-// nodeTypes defined outside the component
-const nodeTypes = { custom: CustomNode };
+});
 
 export default function CompletenessControl({ instanceId }: { instanceId?: string }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -437,222 +446,23 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         data: {
             ...node.data,
             areParamsApplied,
-            onPinClick: (data: any) => setSelectedNode(data),
-            onRun: async (nodeId: string) => {
-                console.log(`🎯 Starting node ${nodeId}`);
-                const currentNode = nodes.find(n => n.id === nodeId);
-                if (currentNode?.data.status === 'running') {
-                    console.log('⚠️ Node is already running');
-                    return;
-                }
-
-                // Get and validate parameters from localStorage
-                const storedParams = localStorage.getItem('validatedParams');
-                if (!storedParams) {
-                    console.log('❌ No validated parameters found');
-                    setParamValidation({
-                        isValid: false,
-                        message: 'Please apply parameters before running nodes'
-                    });
-                    return;
-                }
-
-                // Parse and validate parameters
-                try {
-                    const params = JSON.parse(storedParams) as LocalRunParameters;
-                    const hasEmptyFields = Object.entries(params).some(([key, value]) => {
-                        if (!value || (typeof value === 'string' && value.trim() === '')) {
-                            console.log(`❌ Invalid parameter detected: ${key}`);
-                            return true;
-                        }
-                        return false;
-                    });
-
-                    if (hasEmptyFields) {
-                        console.log('❌ Invalid parameters detected');
-                        setParamValidation({
-                            isValid: false,
-                            message: 'Invalid parameters detected. Please apply valid parameters.'
-                        });
-                        localStorage.removeItem('validatedParams');
-                        return;
-                    }
-
-                    // Additional validation for expected date format (YYYY-MM-DD)
-                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                    if (!dateRegex.test(params.expectedRunDate)) {
-                        console.log('❌ Invalid date format');
-                        setParamValidation({
-                            isValid: false,
-                            message: 'Invalid date format. Use YYYY-MM-DD format.'
-                        });
-                        localStorage.removeItem('validatedParams');
-                        return;
-                    }
-
-                    // Additional validation for paths
-                    if (!params.inputConfigFilePath.includes('/') && !params.inputConfigFilePath.includes('\\')) {
-                        console.log('❌ Invalid config file path');
-                        setParamValidation({
-                            isValid: false,
-                            message: 'Invalid config file path format.'
-                        });
-                        localStorage.removeItem('validatedParams');
-                        return;
-                    }
-
-                    // Validate environment
-                    const validEnvs = ['development', 'staging', 'production'];
-                    if (!validEnvs.includes(params.runEnv.toLowerCase())) {
-                        console.log('❌ Invalid environment');
-                        setParamValidation({
-                            isValid: false,
-                            message: 'Invalid environment. Use development, staging, or production.'
-                        });
-                        localStorage.removeItem('validatedParams');
-                        return;
-                    }
-
-                    console.log('📝 Run Parameters:', params);
-
-                    // Update node status to running
-                    updateNodeStatus(nodeId, 'running');
-
-                    // Get previous outputs
-                    const prevOutputs = { ...nodeOutputs };
-                    console.log('📂 Latest outputs from localStorage:', prevOutputs);
-
-                    // Prepare the request
-                    const request = {
-                        nodeId,
-                        parameters: params,
-                        previousOutputs: prevOutputs,
-                        timestamp: new Date().toISOString()
-                    };
-
-                    console.log('🚀 Node Execution - Full Request:', request);
-
-                    // Start the calculation
-                    const response = await ApiService.startCalculation(request);
-                    console.log('📤 Backend Response:', response);
-
-                    if (response.process_id) {
-                        console.log('✨ Process started with ID:', response.process_id);
-                        setProcessIds(prev => ({
-                            ...prev,
-                            [nodeId]: response.process_id
-                        }));
-
-                        // Set up polling for status
-                        const pollInterval = setInterval(async () => {
-                            try {
-                                const status = await ApiService.getProcessStatus(response.process_id);
-                                console.log(`📊 Status update for ${nodeId}:`, status);
-
-                                if (status.status === 'completed' || status.status === 'failed') {
-                                    updateNodeStatus(nodeId, status.status);
-                                    console.log(`✅ Process ${response.process_id} finished with status: ${status.status}`);
-                                    clearInterval(pollInterval);
-                                    
-                                    if (status.output) {
-                                        console.log(`📦 Node ${nodeId} Output:`, status.output);
-                                        
-                                        // Update nodeOutputs state and localStorage atomically
-                                        const newOutput = status.output;
-                                        setNodeOutputs(prev => {
-                                            const updated = {
-                                                ...prev,
-                                                [nodeId]: newOutput
-                                            };
-                                            // Save to localStorage immediately
-                                            localStorage.setItem('nodeOutputs', JSON.stringify(updated));
-                                            console.log('🔄 Updated nodeOutputs state and localStorage:', updated);
-                                            return updated;
-                                        });
-                                        
-                                        // Update node data with output
-                                        setNodes(nds => nds.map(n => 
-                                            n.id === nodeId 
-                                                ? { ...n, data: { ...n.data, output: status.output } }
-                                                : n
-                                        ));
-                                    }
-                                }
-                            } catch (error) {
-                                console.error('❌ Error polling status:', error);
-                                updateNodeStatus(nodeId, 'failed');
-                                clearInterval(pollInterval);
-                            }
-                        }, 1000);
-
-                        nodeTimeouts.current[nodeId] = pollInterval as any;
-                    }
-                } catch (error) {
-                    console.error('❌ Error parsing parameters:', error);
-                    setParamValidation({
-                        isValid: false,
-                        message: 'Invalid parameter format detected.'
-                    });
-                    localStorage.removeItem('validatedParams');
-                    return;
-                }
-            },
-            onStop: async (nodeId: string) => {
-                console.log(`Stopping node ${nodeId}`);
-                const processId = processIds[nodeId];
-                if (processId) {
-                    try {
-                        await ApiService.stopProcess(processId);
-                        console.log(`Process ${processId} stopped successfully`);
-                    } catch (error) {
-                        console.error('Error stopping process:', error);
-                    }
-                }
-
-                if (nodeTimeouts.current[nodeId]) {
-                    clearInterval(nodeTimeouts.current[nodeId] as any);
-                    delete nodeTimeouts.current[nodeId];
-                }
-                updateNodeStatus(nodeId, 'failed');
-            },
-            onReset: async (nodeId: string) => {
-                console.log(`🔄 Resetting node ${nodeId}`);
-                const processId = processIds[nodeId];
-                if (processId) {
-                    try {
-                        await ApiService.resetProcess(processId);
-                        console.log(`✨ Process ${processId} reset successfully`);
-                    } catch (error) {
-                        console.error('❌ Error resetting process:', error);
-                    }
-                }
-
-                if (nodeTimeouts.current[nodeId]) {
-                    clearInterval(nodeTimeouts.current[nodeId] as any);
-                    delete nodeTimeouts.current[nodeId];
-                }
-                updateNodeStatus(nodeId, 'idle');
-                
-                // Clear output for this specific node
-                setNodeOutputs(prev => {
-                    const updated = { ...prev };
-                    delete updated[nodeId];
-                    localStorage.setItem('nodeOutputs', JSON.stringify(updated));
-                    console.log(`🧹 Cleared output for node ${nodeId}`);
-                    return updated;
-                });
-                
-                // Clear any stored output data from node
-                setNodes(nds => nds.map(n => 
-                    n.id === nodeId 
-                        ? { ...n, data: { ...n.data, output: undefined } }
-                        : n
-                ));
-            }
+            nodeOutputs,
+            setSelectedNode
         }
     })));
 
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+    // Build dependency and downstream maps from edges
+    const dependencyMap = useMemo(() => buildDependencyMap(edges), [edges]);
+    const downstreamMap = useMemo(() => buildDownstreamMap(edges), [edges]);
+
+    // Helper: get node status map
+    const nodeStatusMap = useMemo(() => {
+        const map: Record<string, string> = {};
+        nodes.forEach(n => { map[n.id] = n.data.status; });
+        return map;
+    }, [nodes]);
 
     const updateNodeStatus = useCallback((nodeId: string, status: NodeStatus) => {
         console.log(`Node ${nodeId} status updated to: ${status}`);
@@ -663,21 +473,16 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         ));
     }, [setNodes]);
 
-    const onConnect = useCallback(
-        (params: Connection) => {
-            // Add source and target handles to the connection
-            const sourceHandle = `${params.source}-source`;
-            const targetHandle = `${params.target}-target`;
-            setEdges(eds => addEdge({
+    // Function to handle connections
+    const onConnect = useCallback((params: Connection) => {
+        // Add source and target handles to the connection
+        const connection = {
             ...params,
-                sourceHandle,
-                targetHandle,
-            animated: true,
-            style: { stroke: '#10b981', strokeWidth: 1 }
-            }, eds));
-        },
-        [setEdges]
-    );
+            sourceHandle: `${params.source}-source`,
+            targetHandle: `${params.target}-target`
+        };
+        setEdges((eds) => addEdge(connection, eds));
+    }, [setEdges]);
 
     // Cleanup timeouts on unmount
     useEffect(() => {
@@ -703,7 +508,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         }
     };
 
-    const validateRunParameters = useCallback(() => {
+    const validateParameters = useCallback(() => {
         const newInvalidFields = new Set<string>();
         let hasErrors = false;
         
@@ -726,6 +531,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         if (!hasErrors) {
             console.log('✅ All parameters are valid:', runParams);
             localStorage.setItem('validatedParams', JSON.stringify(runParams));
+            setValidatedParams(runParams);
             setAreParamsApplied(true);
         } else {
             localStorage.removeItem('validatedParams');
@@ -736,7 +542,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     }, [runParams]);
 
     const handleApplyParams = useCallback(() => {
-        const isValid = validateRunParameters();
+        const isValid = validateParameters();
         if (!isValid) {
             console.log('⚠️ Parameter validation failed. Please check highlighted fields.');
             setAreParamsApplied(false);
@@ -744,14 +550,14 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         }
         setAreParamsApplied(true);
         return true;
-    }, [validateRunParameters]);
+    }, [validateParameters]);
 
     // Update the getInputStyle function to use emerald text color
     const getInputStyle = (fieldName: string) => {
-        const baseStyle = "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors";
+        const baseStyle = "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm";
         return invalidFields.has(fieldName)
             ? `${baseStyle} border-red-500 bg-red-50 focus:ring-red-200 text-red-500`
-            : `${baseStyle} border-gray-300 focus:ring-emerald-200 text-emerald-500 placeholder-emerald-300`;
+            : `${baseStyle} border-gray-300 focus:ring-emerald-200 text-emerald-500 placeholder:text-emerald-300/50 placeholder:text-xs`;
     };
 
     // Parameter input fields JSX
@@ -769,9 +575,9 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         <select
                             value={value || ''}
                             onChange={(e) => handleParamChange(key, e.target.value)}
-                            className={`${getInputStyle(key)} ${!value ? 'text-emerald-300' : 'text-emerald-500'}`}
+                            className={`${getInputStyle(key)} ${!value ? 'text-emerald-300/50 text-xs' : 'text-emerald-500'}`}
                         >
-                            <option value="" className="text-emerald-300">Select Environment</option>
+                            <option value="" className="text-emerald-300/50 text-xs">Select Environment</option>
                             <option value="development" className="text-emerald-500">Development</option>
                             <option value="staging" className="text-emerald-500">Staging</option>
                             <option value="production" className="text-emerald-500">Production</option>
@@ -789,11 +595,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                     setInvalidFields(newInvalidFields);
                                 }
                             }}
-                            placeholder={`Enter ${key}`}
+                            placeholder={`Enter ${key.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
                         />
                     )}
                     {invalidFields.has(key) && (
-                        <p className="mt-1 text-sm text-red-500">
+                        <p className="mt-1 text-xs text-red-500">
                             This field is required
                         </p>
                     )}
@@ -942,10 +748,10 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         console.log('🧹 Cleared all node outputs');
     }, []);
 
-    // Add node selection handler
-    const onSelectionChange = useCallback(({ nodes }: { nodes: Node[] }) => {
-        const selectedIds = new Set(nodes.map(n => n.id));
-        setSelectedNodes(selectedIds as Set<string>);
+    // Update the onSelectionChange handler
+    const onSelectionChange = useCallback(({ nodes: selectedNodesArr }: { nodes: Node[] }) => {
+        const selectedIds = new Set(selectedNodesArr.map(n => n.id));
+        setSelectedNodes(selectedIds);
         
         // Update nodes with selection state
         setNodes(nds => nds.map(node => ({
@@ -955,62 +761,47 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 selected: selectedIds.has(node.id)
             }
         })));
-    }, [setNodes]);
 
-    // Update the node run function
-    const runNode = async (nodeId: string) => {
+        // Update selected node with output data
+        if (selectedNodesArr.length > 0) {
+            const selectedId = selectedNodesArr[0].id;
+            const output = nodeOutputs[selectedId];
+            setSelectedNode({
+                ...selectedNodesArr[0],
+                data: {
+                    ...selectedNodesArr[0].data,
+                    output
+                }
+            });
+        } else {
+            setSelectedNode(null);
+        }
+    }, [setNodes, nodeOutputs]);
+
+    // Helper: run a single node (original runNode logic, minus dependency checks)
+    const runSingleNode = async (nodeId: string) => {
         // Check if parameters have been applied
         if (!areParamsApplied) {
             console.log('❌ Cannot run node: Parameters have not been applied');
             return;
         }
-
-        // Get parameters from localStorage
         const storedParams = localStorage.getItem('validatedParams');
         if (!storedParams) {
             console.log('❌ Cannot run node: No validated parameters found');
             setAreParamsApplied(false);
             return;
         }
-
-        // Validate stored parameters
         try {
             const params = JSON.parse(storedParams) as LocalRunParameters;
             const hasEmptyFields = Object.values(params).some(value => 
                 !value || (typeof value === 'string' && value.trim() === '')
             );
-            
             if (hasEmptyFields) {
                 console.log('❌ Cannot run node: Invalid parameters detected');
                 setAreParamsApplied(false);
                 localStorage.removeItem('validatedParams');
                 return;
             }
-
-            // Find all upstream nodes
-            const upstreamNodes = new Set<string>();
-            const findUpstreamNodes = (currentId: string) => {
-                edges.forEach(edge => {
-                    if (edge.target === currentId) {
-                        upstreamNodes.add(edge.source);
-                        findUpstreamNodes(edge.source);
-                    }
-                });
-            };
-            findUpstreamNodes(nodeId);
-
-            // Check if all upstream nodes are completed
-            const allUpstreamCompleted = Array.from(upstreamNodes).every(id => {
-                const node = nodes.find(n => n.id === id);
-                return node?.data.status === 'completed';
-            });
-
-            if (!allUpstreamCompleted) {
-                console.log('⏳ Node in standby: Waiting for upstream nodes to complete');
-                updateNodeStatus(nodeId, 'standby');
-                return;
-            }
-
             // Proceed with node execution
             console.log(`🎯 Starting node ${nodeId}`);
             const currentNode = nodes.find(n => n.id === nodeId);
@@ -1018,72 +809,80 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 console.log('⚠️ Node is already running');
                 return;
             }
-
-            // Update node status to running
             updateNodeStatus(nodeId, 'running');
-
-            // Get previous outputs
             const prevOutputs = { ...nodeOutputs };
-            console.log('📂 Latest outputs from localStorage:', prevOutputs);
-
-            // Prepare the request
             const request = {
                 nodeId,
                 parameters: params,
                 previousOutputs: prevOutputs,
                 timestamp: new Date().toISOString()
             };
-
-            console.log('🚀 Node Execution - Full Request:', request);
-
-            // Start the calculation
             const response = await ApiService.startCalculation(request);
-            console.log('📤 Backend Response:', response);
-
             if (response.process_id) {
-                console.log('✨ Process started with ID:', response.process_id);
-                setProcessIds(prev => ({
-                    ...prev,
-                    [nodeId]: response.process_id
-                }));
-
-                // Set up polling for status
+                setProcessIds(prev => ({ ...prev, [nodeId]: response.process_id }));
                 const pollInterval = setInterval(async () => {
                     try {
                         const status = await ApiService.getProcessStatus(response.process_id);
-                        console.log('📊 Status update for ' + nodeId + ':', status);
-
                         if (status.status === 'completed' || status.status === 'failed') {
                             clearInterval(pollInterval);
                             updateNodeStatus(nodeId, status.status);
-                            
                             if (status.status === 'completed' && status.output) {
-                                console.log('📦 Node ' + nodeId + ' Output:', status.output);
                                 setNodeOutputs(prev => {
-                                    const updated = {
-                                        ...prev,
-                                        [nodeId]: status.output
-                                    };
+                                    const updated = { ...prev, [nodeId]: status.output };
                                     localStorage.setItem('nodeOutputs', JSON.stringify(updated));
-                                    console.log('🔄 Updated nodeOutputs state and localStorage:', updated);
                                     return updated;
                                 });
                             }
                         }
                     } catch (error) {
-                        console.error('❌ Error polling status:', error);
                         clearInterval(pollInterval);
                         updateNodeStatus(nodeId, 'failed');
                     }
                 }, 1000);
-
                 nodeTimeouts.current[nodeId] = pollInterval;
             }
         } catch (error) {
-            console.error('❌ Error running node:', error);
             updateNodeStatus(nodeId, 'failed');
         }
     };
+
+    // Chain-dependency aware node runner
+    const runNode = useCallback(async (nodeId: string) => {
+        try {
+            await runNodeWithDependencies(
+                nodeId,
+                runSingleNode,
+                dependencyMap,
+                nodeStatusMap
+            );
+        } catch (err) {
+            alert(err instanceof Error ? err.message : String(err));
+        }
+    }, [dependencyMap, nodeStatusMap, runSingleNode]);
+
+    // Downstream reset logic
+    const resetNodeAndDownstream = useCallback(async (nodeId: string) => {
+        const toReset = Array.from(getAllDownstreamNodes(nodeId, downstreamMap));
+        for (const id of toReset) {
+            // Stop process if running
+            const processId = processIds[id];
+            if (processId) {
+                try { await ApiService.resetProcess(processId); } catch {}
+            }
+            if (nodeTimeouts.current[id]) {
+                clearInterval(nodeTimeouts.current[id] as any);
+                delete nodeTimeouts.current[id];
+            }
+            updateNodeStatus(id, 'idle');
+            setNodeOutputs(prev => {
+                const updated = { ...prev };
+                delete updated[id];
+                localStorage.setItem('nodeOutputs', JSON.stringify(updated));
+                return updated;
+            });
+            setNodes(nds => nds.map(n => n.id === id ? { ...n, data: { ...n.data, output: undefined } } : n));
+        }
+    }, [downstreamMap, processIds, updateNodeStatus, setNodeOutputs, setNodes]);
 
     // Add a global message when parameters haven't been applied
     const GlobalMessage = () => {
@@ -1109,13 +908,25 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         })));
     }, [areParamsApplied, setNodes]);
 
+    // Define nodeTypes with the required props
+    const nodeTypes = useMemo(() => ({
+        custom: (props: any) => (
+            <CustomNode 
+                {...props} 
+                nodeOutputs={nodeOutputs}
+                setSelectedNode={setSelectedNode}
+            />
+        )
+    }), [nodeOutputs, setSelectedNode]);
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-            <GlobalMessage />
+        <HandlerContext.Provider value={{ runNode, resetNodeAndDownstream }}>
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                <GlobalMessage />
             {/* Main Content */}
-            <div className="relative flex flex-col h-screen">
-                <div className="flex-1 relative" style={{ height: `calc(100vh - ${bottomBarHeight}px)` }}>
-            <div className="flex-1">
+                <div className="flex flex-col h-screen">
+                    {/* Flow Container */}
+                    <div className="flex-1 overflow-hidden">
                         <div className="bg-slate-800/50 border-b border-slate-700/50 p-4">
                             <div className="flex justify-center">
                                 <h1 className="text-2xl font-semibold text-emerald-400">
@@ -1123,8 +934,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         </h1>
                     </div>
                 </div>
-
-                        <div className="h-[calc(100vh-96px-4rem)]">
+                        <div className="h-[calc(100vh-180px)]">
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
@@ -1152,94 +962,106 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 />
                                 <Controls className="bg-slate-800 border border-slate-700/50 rounded-lg" />
                     </ReactFlow>
-                        </div>
                 </div>
             </div>
 
-                {/* Bottom Output Bar with Resize Handle */}
-                <div className="relative">
+                    {/* Bottom Output Bar with Resize Handle */}
+                    <div 
+                        className="relative bg-slate-800/95 border-t border-slate-700/50"
+                        style={{ height: `${bottomBarHeight}px`, minHeight: '120px', maxHeight: '50vh' }}
+                    >
             {/* Resize Handle */}
             <div
                 className={`
-                            absolute top-0 left-0 w-full h-1 cursor-row-resize z-10
-                            ${isResizingBottom ? 'bg-emerald-500' : 'bg-transparent hover:bg-emerald-500/30'}
+                                absolute -top-1 left-0 w-full h-2 cursor-row-resize z-10
+                                ${isResizingBottom ? 'bg-emerald-500' : 'bg-transparent hover:bg-emerald-500/30'}
                     transition-colors
                 `}
                 onMouseDown={(e) => {
                     e.preventDefault();
-                            setIsResizingBottom(true);
+                                setIsResizingBottom(true);
                 }}
             >
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                            <FaGripLines className="text-emerald-400/70" />
+                                <FaGripLines className="text-emerald-400/70" />
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Output Bar Content */}
-                    <div 
-                        className="bg-slate-800/95 border-t border-slate-700/50 px-4 overflow-hidden"
-                        style={{ height: `${bottomBarHeight}px` }}
-                    >
-                        {selectedNode ? (
-                            <div className="flex-1 text-sm text-slate-300 h-full overflow-hidden">
-                                <div className="flex items-center justify-between h-8 border-b border-slate-700/50">
-                                    <span className="text-emerald-400 font-medium">{selectedNode.fullName} Output</span>
-                                    <button 
-                                        onClick={() => setSelectedNode(null)}
-                                        className="text-slate-400 hover:text-slate-300 text-xs"
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-                                {selectedNode.output ? (
-                                    <div className="grid grid-cols-3 gap-4 py-2 text-xs h-[calc(100%-2rem)] overflow-auto">
-                                        <div className="overflow-auto">
-                                            <div className="font-medium text-emerald-400 mb-1 sticky top-0 bg-slate-800/95 py-1">Run Parameters</div>
-                                            <table className="w-full">
-                                                <tbody>
-                                                    {Object.entries(selectedNode.output.run_parameters || {}).map(([key, value]) => (
-                                                        <tr key={key} className="border-b border-slate-700/30">
-                                                            <td className="py-0.5 pr-2 text-emerald-400/70">{key}:</td>
-                                                            <td className="py-0.5">{String(value)}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
+                        {/* Output Bar Content */}
+                        <div className="h-full px-4 overflow-y-auto">
+                            {selectedNode ? (
+                                <div className="flex-1 text-sm text-slate-300 h-full overflow-hidden">
+                                    <div className="flex items-center justify-between h-8 border-b border-slate-700/50">
+                                        <span className="text-emerald-400 font-medium">{selectedNode.data?.fullName || selectedNode.fullName} Output</span>
+                                        <button 
+                                            onClick={() => setSelectedNode(null)}
+                                            className="text-slate-400 hover:text-slate-300 text-xs"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                    <div className="mt-4 space-y-4">
+                                        {/* Status */}
+                                        <div>
+                                            <span className="text-emerald-400 font-medium">Status: </span>
+                                            <span className={`px-2 py-1 rounded-full text-xs ${
+                                                selectedNode.data.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                selectedNode.data.status === 'failed' ? 'bg-red-500/20 text-red-400' :
+                                                selectedNode.data.status === 'running' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                'bg-slate-500/20 text-slate-400'
+                                            }`}>
+                                                {selectedNode.data.status}
+                                            </span>
                                         </div>
-                                        <div className="overflow-auto">
-                                            <div className="font-medium text-emerald-400 mb-1 sticky top-0 bg-slate-800/95 py-1">Execution Logs</div>
-                                            <div className="space-y-0.5">
-                                                {(selectedNode.output.execution_logs || []).map((log: string, index: number) => (
-                                                    <div key={index} className="text-slate-300">{log}</div>
-                                                ))}
+
+                                        {/* Run Parameters */}
+                                        {selectedNode.data.output?.run_parameters && (
+                                            <div>
+                                                <h3 className="text-emerald-400 font-medium mb-2">Run Parameters:</h3>
+                                                <div className="bg-slate-900/50 rounded p-2 space-y-1">
+                                                    {Object.entries(selectedNode.data.output.run_parameters).map(([key, value]) => (
+                                                        <div key={key} className="grid grid-cols-2 gap-2">
+                                                            <span className="text-slate-400">{key}:</span>
+                                                            <span className="text-slate-300">{value as string}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="overflow-auto">
-                                            <div className="font-medium text-emerald-400 mb-1 sticky top-0 bg-slate-800/95 py-1">Results</div>
-                                            <table className="w-full">
-                                                <tbody>
-                                                    {Object.entries(selectedNode.output.calculation_results || {}).map(([key, value]) => (
-                                                        <tr key={key} className="border-b border-slate-700/30">
-                                                            <td className="py-0.5 pr-2 text-emerald-400/70">{key}:</td>
-                                                            <td className="py-0.5">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</td>
-                                                        </tr>
+                                        )}
+
+                                        {/* Execution Logs */}
+                                        {selectedNode.data.output?.execution_logs && (
+                                            <div>
+                                                <h3 className="text-emerald-400 font-medium mb-2">Execution Logs:</h3>
+                                                <div className="bg-slate-900/50 rounded p-2 space-y-1">
+                                                    {selectedNode.data.output.execution_logs.map((log: string, index: number) => (
+                                                        <div key={index} className="text-slate-300">
+                                                            {log}
+                                                        </div>
                                                     ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Calculation Results */}
+                                        {selectedNode.data.output?.calculation_results && (
+                                            <div>
+                                                <h3 className="text-emerald-400 font-medium mb-2">Calculation Results:</h3>
+                                                <div className="bg-slate-900/50 rounded p-2">
+                                                    <pre className="text-slate-300 whitespace-pre-wrap">
+                                                        {JSON.stringify(selectedNode.data.output.calculation_results, null, 2)}
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                ) : (
-                                    <div className="flex items-center justify-center h-[calc(100%-2rem)] text-slate-400">
-                                        No output available for this node
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-sm text-slate-400">
-                                Click on a node's pin (left or right circle) to view its output
-                            </div>
-                        )}
-                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-slate-400">
+                                    Select a node to view its output
+                                </div>
+                            )}
+                        </div>
                 </div>
             </div>
 
@@ -1247,7 +1069,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             <div
                 ref={resizeRef}
                 className={`
-                    fixed right-0 top-0 h-full bg-slate-800/95 border-l border-slate-700/50
+                        fixed right-0 top-0 h-full bg-slate-800/95 border-l border-slate-700/50
                     transition-all duration-300 ease-in-out
                     ${!isSidebarOpen ? 'w-12' : ''}
                 `}
@@ -1257,49 +1079,49 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 }}
                 onDoubleClick={() => !isResizing && setIsSidebarOpen(!isSidebarOpen)}
             >
-                {/* Resize Handle */}
-                <div
-                    className={`
-                        absolute left-0 top-0 h-full w-1 cursor-col-resize
-                        ${isResizing ? 'bg-emerald-500' : 'hover:bg-emerald-500/30'}
-                        transition-colors
-                    `}
-                    onMouseDown={(e) => {
-                        e.preventDefault();
-                        setIsResizing(true);
-                        
-                        const startX = e.pageX;
-                        const startWidth = sidebarWidth;
-                        
-                        const handleMouseMove = (moveEvent: MouseEvent) => {
-                            const deltaX = startX - moveEvent.pageX;
-                            const newWidth = Math.min(Math.max(startWidth + deltaX, minWidth), maxWidth);
-                            setSidebarWidth(newWidth);
-                        };
-                        
-                        const handleMouseUp = () => {
-                            document.removeEventListener('mousemove', handleMouseMove);
-                            document.removeEventListener('mouseup', handleMouseUp);
-                            setIsResizing(false);
-                        };
-                        
-                        document.addEventListener('mousemove', handleMouseMove);
-                        document.addEventListener('mouseup', handleMouseUp);
-                    }}
-                />
+                    {/* Resize Handle */}
+                    <div
+                        className={`
+                            absolute left-0 top-0 h-full w-1 cursor-col-resize
+                            ${isResizing ? 'bg-emerald-500' : 'hover:bg-emerald-500/30'}
+                            transition-colors
+                        `}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            setIsResizing(true);
+                            
+                            const startX = e.pageX;
+                            const startWidth = sidebarWidth;
+                            
+                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                                const deltaX = startX - moveEvent.pageX;
+                                const newWidth = Math.min(Math.max(startWidth + deltaX, minWidth), maxWidth);
+                                setSidebarWidth(newWidth);
+                            };
+                            
+                            const handleMouseUp = () => {
+                                document.removeEventListener('mousemove', handleMouseMove);
+                                document.removeEventListener('mouseup', handleMouseUp);
+                                setIsResizing(false);
+                            };
+                            
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                        }}
+                    />
 
                 <div className={`
-                    flex items-center h-16 px-4 border-b border-slate-700/50
+                        flex items-center h-16 px-4 border-b border-slate-700/50
                     ${isSidebarOpen ? 'justify-between' : 'justify-center'}
                 `}>
                     {isSidebarOpen && (
-                        <span className="text-emerald-400 font-medium">
+                            <span className="text-emerald-400 font-medium">
                             Run Parameters
                         </span>
                     )}
                     <FaChevronLeft
                         className={`
-                            text-emerald-400/70 cursor-pointer transition-transform duration-300 hover:text-emerald-300
+                                text-emerald-400/70 cursor-pointer transition-transform duration-300 hover:text-emerald-300
                             ${isSidebarOpen ? '' : 'rotate-180'}
                         `}
                         onClick={(e) => {
@@ -1309,55 +1131,55 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     />
                 </div>
 
-                {/* Sidebar Content */}
+                    {/* Sidebar Content */}
                 {isSidebarOpen && (
-                    <div className="p-6 text-slate-300 overflow-y-auto max-h-[calc(100vh-4rem)]">
-                        <div className="space-y-6">
-                            {/* Form fields with updated styling */}
-                            <div className="space-y-4">
-                                {renderParameterInputs()}
+                        <div className="p-6 text-slate-300 overflow-y-auto max-h-[calc(100vh-4rem)]">
+                            <div className="space-y-6">
+                                {/* Form fields with updated styling */}
+                        <div className="space-y-4">
+                                    {renderParameterInputs()}
                             </div>
 
-                            {/* Buttons Container */}
-                            <div className="pt-6 flex gap-4">
-                                <button
-                                    onClick={handleApplyParams}
-                                    className={`flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm 
-                                    font-medium transition-colors shadow-lg shadow-emerald-900/20 focus:ring-2 
-                                    focus:ring-emerald-500/50 active:transform active:scale-[0.98]`}
-                                >
-                                    Apply Parameters
-                                </button>
-                                {/* Validation Message */}
-                                {paramValidation.message && (
-                                    <p className={`mt-2 text-sm ${
-                                        paramValidation.isValid ? 'text-emerald-400' : 'text-red-400'
-                                    }`}>
-                                        {paramValidation.message}
-                                    </p>
-                                )}
-                                <button
-                                    onClick={runAllNodes}
-                                    disabled={isRunningAll}
-                                    className={`flex-1 px-4 py-3 text-white rounded-lg text-sm font-medium transition-colors 
-                                    shadow-lg shadow-blue-900/20 focus:ring-2 focus:ring-blue-500/50 
-                                    active:transform active:scale-[0.98] ${isRunningAll 
-                                        ? 'bg-blue-400 cursor-not-allowed'
-                                        : 'bg-blue-600 hover:bg-blue-500'}`}
-                                >
-                                    {isRunningAll ? 'Running...' : 'Run All'}
-                                </button>
+                                {/* Buttons Container */}
+                                <div className="pt-6 flex gap-4">
+                                    <button
+                                        onClick={handleApplyParams}
+                                        className={`flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm 
+                                        font-medium transition-colors shadow-lg shadow-emerald-900/20 focus:ring-2 
+                                        focus:ring-emerald-500/50 active:transform active:scale-[0.98]`}
+                                    >
+                                        Apply Parameters
+                                    </button>
+                                    {/* Validation Message */}
+                                    {paramValidation.message && (
+                                        <p className={`mt-2 text-sm ${
+                                            paramValidation.isValid ? 'text-emerald-400' : 'text-red-400'
+                                        }`}>
+                                            {paramValidation.message}
+                                        </p>
+                                    )}
+                                    <button
+                                        onClick={runAllNodes}
+                                        disabled={isRunningAll}
+                                        className={`flex-1 px-4 py-3 text-white rounded-lg text-sm font-medium transition-colors 
+                                        shadow-lg shadow-blue-900/20 focus:ring-2 focus:ring-blue-500/50 
+                                        active:transform active:scale-[0.98] ${isRunningAll 
+                                            ? 'bg-blue-400 cursor-not-allowed'
+                                            : 'bg-blue-600 hover:bg-blue-500'}`}
+                                    >
+                                        {isRunningAll ? 'Running...' : 'Run All'}
+                                    </button>
                             </div>
 
-                            {/* Reset All Button */}
-                            <div className="pt-2">
-                                <button
-                                    onClick={resetAllNodes}
-                                    className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm 
-                                    font-medium transition-colors shadow-lg shadow-slate-900/20 focus:ring-2 
-                                    focus:ring-slate-500/50 active:transform active:scale-[0.98]"
-                                >
-                                    Reset All Nodes
+                                {/* Reset All Button */}
+                                <div className="pt-2">
+                                    <button
+                                        onClick={resetAllNodes}
+                                        className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm 
+                                        font-medium transition-colors shadow-lg shadow-slate-900/20 focus:ring-2 
+                                        focus:ring-slate-500/50 active:transform active:scale-[0.98]"
+                                    >
+                                        Reset All Nodes
                                 </button>
                             </div>
                         </div>
@@ -1367,7 +1189,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 {/* Collapsed state indicator */}
                 {!isSidebarOpen && (
                     <div
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-emerald-400/70 vertical-text"
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-emerald-400/70 vertical-text"
                     >
                         <style jsx>{`
                             .vertical-text {
@@ -1381,5 +1203,6 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 )}
             </div>
         </div>
+        </HandlerContext.Provider>
     );
 } 
