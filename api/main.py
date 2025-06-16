@@ -41,7 +41,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 class NodeType(str, Enum):
     CONFIG_COMP = "reading_config_comp"
-    FILE_SEARCH_COMP = "file_searching_comp"
+    FILE_SEARCH_SRC = "file_searching_src"
+    FILE_SEARCH_TGT = "file_searching_tgt"
     HARMONISATION_SRC = "harmonisation_src"
     SRC_ENRICHMENT = "src_enrichment"
     DATA_TRANSFORM = "data_transform"
@@ -202,8 +203,10 @@ async def process_node_async(process_id: str, node_id: str, params: RunParameter
 def process_node(node_id: str, params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
     if node_id == "reading_config_comp":
         return process_config_comp_node(params)
-    elif node_id == "file_searching_comp":
-        return process_file_search_comp_node(params, previous_outputs)
+    elif node_id == "file_searching_src":
+        return process_file_search_node(params, previous_outputs, "src")
+    elif node_id == "file_searching_tgt":
+        return process_file_search_node(params, previous_outputs, "tgt")
     elif "harmonisation" in node_id:
         return process_harmonisation_node(params, previous_outputs)
     elif "enrichment" in node_id:
@@ -250,8 +253,8 @@ def process_config_comp_node(params: RunParameters) -> Dict:
         }
     }
 
-def process_file_search_comp_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
-    """Process the file searching component that handles both SRC and TGT file operations."""
+def process_file_search_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None, side: str = "src") -> Dict:
+    """Process the file searching component for either SRC or TGT side."""
     has_valid_path = '/' in params.rootFileDir or '\\' in params.rootFileDir
     
     # Use config node output if available
@@ -259,25 +262,23 @@ def process_file_search_comp_node(params: RunParameters, previous_outputs: Optio
     if previous_outputs and "reading_config_comp" in previous_outputs:
         config_validation = previous_outputs["reading_config_comp"].get("calculation_results", {}).get("validation_details")
     
+    side_path = f"{params.rootFileDir}/{side}"
+    
     return {
         "status": "success" if has_valid_path else "failed",
         "run_parameters": params.dict(),
         "execution_logs": [
-            f"Starting combined file search at {datetime.now().isoformat()}",
-            f"Checking root directory: {params.rootFileDir}",
+            f"Starting {side.upper()} file search at {datetime.now().isoformat()}",
+            f"Checking {side.upper()} directory: {side_path}",
             f"Environment: {params.runEnv}",
-            "File search completed for both SRC and TGT",
+            f"File search completed for {side.upper()}",
             *(["Using config validation from previous node"] if config_validation else [])
         ],
         "calculation_results": {
             "file_search_details": {
-                "src_path": f"{params.rootFileDir}/src",
-                "tgt_path": f"{params.rootFileDir}/tgt",
+                "path": side_path,
                 "is_valid": has_valid_path,
-                "files_found": {
-                    "src": ["example_src_1.dat", "example_src_2.dat"],
-                    "tgt": ["example_tgt_1.dat", "example_tgt_2.dat"]
-                }
+                "files_found": [f"example_{side}_1.dat", f"example_{side}_2.dat"]
             },
             "config_validation": config_validation
         }

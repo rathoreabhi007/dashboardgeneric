@@ -46,14 +46,21 @@ const initialNodes: Node[] = [
         id: 'reading_config_comp',
         type: 'custom',
         data: { fullName: 'Reading_Config_Comp', status: 'idle' },
-        position: { x: 50, y: 120 },
+        position: { x: 100, y: 250 },
         draggable: false
     },
     {
-        id: 'file_searching_comp',
+        id: 'file_searching_src',
         type: 'custom',
-        data: { fullName: 'File_Searching_Comp', status: 'idle' },
-        position: { x: 250, y: 120 },
+        data: { fullName: 'File_Searching_SRC', status: 'idle' },
+        position: { x: 300, y: 100 },
+        draggable: false
+    },
+    {
+        id: 'file_searching_tgt',
+        type: 'custom',
+        data: { fullName: 'File_Searching_TGT', status: 'idle' },
+        position: { x: 300, y: 400 },
         draggable: false
     },
     // Top flow nodes (SRC)
@@ -61,49 +68,49 @@ const initialNodes: Node[] = [
         id: 'harmonisation_src',
         type: 'custom',
         data: { fullName: 'Harmonisation_SRC', status: 'idle' },
-        position: { x: 450, y: 20 },
+        position: { x: 500, y: 100 },
         draggable: false
     },
     {
         id: 'src_enrichment',
         type: 'custom',
         data: { fullName: 'SRC Enrichment', status: 'idle' },
-        position: { x: 650, y: 20 },
+        position: { x: 700, y: 100 },
         draggable: false
     },
     {
         id: 'data_transform',
         type: 'custom',
         data: { fullName: 'Data Transform Post Enrichment', status: 'idle' },
-        position: { x: 850, y: 20 },
+        position: { x: 900, y: 100 },
         draggable: false
     },
     {
         id: 'combine_data',
         type: 'custom',
         data: { fullName: 'Combine SRC and TGT Data', status: 'idle' },
-        position: { x: 850, y: 120 },
+        position: { x: 900, y: 250 },
         draggable: false
     },
     {
         id: 'apply_rules',
         type: 'custom',
         data: { fullName: 'Apply Rec Rules & Break Explain', status: 'idle' },
-        position: { x: 1050, y: 120 },
+        position: { x: 1100, y: 250 },
         draggable: false
     },
     {
         id: 'output_rules',
         type: 'custom',
         data: { fullName: 'Output Rules', status: 'idle' },
-        position: { x: 1250, y: 120 },
+        position: { x: 1300, y: 250 },
         draggable: false
     },
     {
         id: 'break_rolling',
         type: 'custom',
         data: { fullName: 'BreakRolling Details', status: 'idle' },
-        position: { x: 1450, y: 120 },
+        position: { x: 1500, y: 250 },
         draggable: false
     },
     // Bottom flow nodes (TGT)
@@ -111,45 +118,55 @@ const initialNodes: Node[] = [
         id: 'harmonisation_tgt',
         type: 'custom',
         data: { fullName: 'Harmonisation_TGT', status: 'idle' },
-        position: { x: 450, y: 220 },
+        position: { x: 500, y: 400 },
         draggable: false
     },
     {
         id: 'tgt_enrichment',
         type: 'custom',
         data: { fullName: 'TGT Enrichment', status: 'idle' },
-        position: { x: 650, y: 220 },
+        position: { x: 700, y: 400 },
         draggable: false
     },
     {
         id: 'tgt_data_transform',
         type: 'custom',
         data: { fullName: 'Data Transform Post Enrichment', status: 'idle' },
-        position: { x: 850, y: 220 },
+        position: { x: 900, y: 400 },
         draggable: false
     }
 ];
 
 const initialEdges: Edge[] = [
-    // Initial flow
+    // Initial flow to SRC
     {
-        id: 'config-to-file-search',
+        id: 'config-to-file-search-src',
         source: 'reading_config_comp',
-        target: 'file_searching_comp',
+        target: 'file_searching_src',
         sourceHandle: 'reading_config_comp-source',
-        targetHandle: 'file_searching_comp-target',
+        targetHandle: 'file_searching_src-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
+    },
+    // Initial flow to TGT
+    {
+        id: 'config-to-file-search-tgt',
+        source: 'reading_config_comp',
+        target: 'file_searching_tgt',
+        sourceHandle: 'reading_config_comp-source',
+        targetHandle: 'file_searching_tgt-target',
+        animated: false,
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     // Top flow edges (SRC)
     {
         id: 'file-search-to-harmonisation-src',
-        source: 'file_searching_comp',
+        source: 'file_searching_src',
         target: 'harmonisation_src',
-        sourceHandle: 'file_searching_comp-source',
+        sourceHandle: 'file_searching_src-source',
         targetHandle: 'harmonisation_src-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'harmonisation-to-enrichment',
@@ -158,7 +175,7 @@ const initialEdges: Edge[] = [
         sourceHandle: 'harmonisation_src-source',
         targetHandle: 'src_enrichment-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'enrichment-to-transform',
@@ -167,7 +184,7 @@ const initialEdges: Edge[] = [
         sourceHandle: 'src_enrichment-source',
         targetHandle: 'data_transform-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'transform-to-combine',
@@ -176,17 +193,17 @@ const initialEdges: Edge[] = [
         sourceHandle: 'data_transform-source',
         targetHandle: 'combine_data-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     // Bottom flow edges (TGT)
     {
         id: 'file-search-to-harmonisation-tgt',
-        source: 'file_searching_comp',
+        source: 'file_searching_tgt',
         target: 'harmonisation_tgt',
-        sourceHandle: 'file_searching_comp-source',
+        sourceHandle: 'file_searching_tgt-source',
         targetHandle: 'harmonisation_tgt-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'harmonisation-to-enrichment-tgt',
@@ -195,7 +212,7 @@ const initialEdges: Edge[] = [
         sourceHandle: 'harmonisation_tgt-source',
         targetHandle: 'tgt_enrichment-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'enrichment-to-transform-tgt',
@@ -204,7 +221,7 @@ const initialEdges: Edge[] = [
         sourceHandle: 'tgt_enrichment-source',
         targetHandle: 'tgt_data_transform-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'transform-to-combine-tgt',
@@ -213,7 +230,7 @@ const initialEdges: Edge[] = [
         sourceHandle: 'tgt_data_transform-source',
         targetHandle: 'combine_data-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     // Final flow edges
     {
@@ -223,7 +240,7 @@ const initialEdges: Edge[] = [
         sourceHandle: 'combine_data-source',
         targetHandle: 'apply_rules-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'rules-to-output',
@@ -232,7 +249,7 @@ const initialEdges: Edge[] = [
         sourceHandle: 'apply_rules-source',
         targetHandle: 'output_rules-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'output-to-break',
@@ -241,7 +258,7 @@ const initialEdges: Edge[] = [
         sourceHandle: 'output_rules-source',
         targetHandle: 'break_rolling-target',
         animated: false,
-        style: { stroke: '#10b981', strokeWidth: 2 }
+        style: { stroke: '#1e293b', strokeWidth: 2 }
     }
 ];
 
@@ -307,13 +324,11 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
 
     // Icon container style with state-based colors
     const getIconContainerStyle = () => {
-        const baseIconStyle = "w-10 h-10 flex items-center justify-center bg-slate-800/50 rounded-full border shadow-lg transition-all duration-200";
-        
-        if (isSelected || isHovered) {
-            return `${baseIconStyle} border-emerald-400`;
-        }
-        
-        return `${baseIconStyle} border-slate-700`;
+        return [
+            "w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 relative",
+            "before:absolute before:inset-0 before:rounded-full before:border before:border-black",
+            "after:absolute after:inset-[3px] after:rounded-full after:bg-slate-800"
+        ].join(" ");
     };
 
     return (
@@ -334,13 +349,13 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
                 id={`${id}-target`}
             />
             <div className={getIconContainerStyle()}>
-                {data.status === 'running' && <FaSpinner className="animate-spin text-yellow-400 w-4 h-4" />}
-                {data.status === 'completed' && <FaCheckCircle className="text-green-400 w-4 h-4" />}
-                {data.status === 'failed' && <FaTimesCircle className="text-red-400 w-4 h-4" />}
-                {data.status === 'standby' && <FaCircle className="text-white/80 w-4 h-4" />}
+                {data.status === 'running' && <FaSpinner className="animate-spin text-yellow-400 w-5 h-5 relative z-10" />}
+                {data.status === 'completed' && <FaCheckCircle className="text-green-400 w-5 h-5 relative z-10" />}
+                {data.status === 'failed' && <FaTimesCircle className="text-red-400 w-5 h-5 relative z-10" />}
+                {data.status === 'standby' && <FaCircle className="text-white/80 w-5 h-5 relative z-10" />}
             </div>
-            <div className="text-[8px] text-slate-400 mt-1 max-w-[80px] text-center">{data.fullName}</div>
-            <div className="flex gap-0.5 mt-1">
+            <div className="text-[10px] text-black mt-1 max-w-[80px] text-center font-medium">{data.fullName}</div>
+            <div className="flex gap-1 mt-1">
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
@@ -349,16 +364,16 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
                     disabled={!canRun}
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
-                    className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[6px] relative
+                    className={`flex items-center gap-0.5 px-1.5 py-1 rounded text-[8px] relative
                         ${!canRun
                         ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
                         : 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
                         }`}
                 >
-                    <FaPlay className="w-1 h-1" />
+                    <FaPlay className="w-1.5 h-1.5" />
                     Run
                     {showTooltip && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[6px] 
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[8px] 
                             bg-slate-900 text-white rounded whitespace-nowrap z-50">
                             {canRun ? "Click to run node" : "Node is running"}
                         </div>
@@ -370,12 +385,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
                         data.onStop?.(id);
                     }}
                     disabled={!isRunning}
-                    className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[6px] ${!isRunning
+                    className={`flex items-center gap-0.5 px-1.5 py-1 rounded text-[8px] ${!isRunning
                         ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
                         : 'bg-slate-800 hover:bg-slate-700 text-red-400'
                         }`}
                 >
-                    <FaStop className="w-1 h-1" />
+                    <FaStop className="w-1.5 h-1.5" />
                     Stop
                 </button>
                 <button
@@ -384,16 +399,15 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
                         resetNodeAndDownstream(id);
                     }}
                     disabled={!canReset && !isRunning}
-                    className={`flex items-center gap-0.5 px-1 py-0.5 rounded text-[6px] ${!canReset && !isRunning
+                    className={`flex items-center gap-0.5 px-1.5 py-1 rounded text-[8px] ${!canReset && !isRunning
                         ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
                         : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
                         }`}
                 >
-                    <FaUndo className="w-1 h-1" />
+                    <FaUndo className="w-1.5 h-1.5" />
                     Reset
                 </button>
             </div>
-
             <Handle
                 type="source"
                 position={Position.Right}
@@ -466,12 +480,28 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     const updateNodeStatus = useCallback((nodeId: string, status: NodeStatus) => {
         console.log(`Node ${nodeId} status updated to: ${status}`);
+        
+        // Update node status
         setNodes(nds => nds.map(node =>
             node.id === nodeId
                 ? { ...node, data: { ...node.data, status } }
                 : node
         ));
-    }, [setNodes]);
+
+        // Update edge colors based on source node status
+        setEdges(eds => eds.map(edge => {
+            if (edge.source === nodeId) {
+                return {
+                    ...edge,
+                    style: {
+                        ...edge.style,
+                        stroke: status === 'completed' ? '#10b981' : '#1e293b'
+                    }
+                };
+            }
+            return edge;
+        }));
+    }, [setNodes, setEdges]);
 
     // Function to handle connections
     const onConnect = useCallback((params: Connection) => {
@@ -665,11 +695,12 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         const nodeSequence = [
             // Top flow
             'reading_config_comp',
-            'file_searching_comp',
+            'file_searching_src',
             'harmonisation_src',
             'src_enrichment',
             'data_transform',
             // Bottom flow
+            'file_searching_tgt',
             'harmonisation_tgt',
             'tgt_enrichment',
             'tgt_data_transform',
@@ -863,11 +894,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     // Downstream reset logic
     const resetNodeAndDownstream = useCallback(async (nodeId: string) => {
         const toReset = Array.from(getAllDownstreamNodes(nodeId, downstreamMap));
+        
+        // Reset nodes
         for (const id of toReset) {
-            // Stop process if running
-            const processId = processIds[id];
-            if (processId) {
-                try { await ApiService.resetProcess(processId); } catch {}
+            if (processIds[id]) {
+                try { await ApiService.resetProcess(processIds[id]); } catch {}
             }
             if (nodeTimeouts.current[id]) {
                 clearInterval(nodeTimeouts.current[id] as any);
@@ -880,22 +911,22 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 localStorage.setItem('nodeOutputs', JSON.stringify(updated));
                 return updated;
             });
-            setNodes(nds => nds.map(n => n.id === id ? { ...n, data: { ...n.data, output: undefined } } : n));
         }
-    }, [downstreamMap, processIds, updateNodeStatus, setNodeOutputs, setNodes]);
 
-    // Add a global message when parameters haven't been applied
-    const GlobalMessage = () => {
-        if (!areParamsApplied) {
-            return (
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 
-                    bg-slate-900/90 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
-                    Fill and apply parameters to begin execution
-                </div>
-            );
-        }
-        return null;
-    };
+        // Reset edge colors for all affected edges
+        setEdges(eds => eds.map(edge => {
+            if (toReset.includes(edge.source)) {
+                return {
+                    ...edge,
+                    style: {
+                        ...edge.style,
+                        stroke: '#1e293b'
+                    }
+                };
+            }
+            return edge;
+        }));
+    }, [downstreamMap, processIds, updateNodeStatus, setNodeOutputs, setEdges]);
 
     // Update nodes when areParamsApplied changes
     useEffect(() => {
@@ -922,7 +953,6 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     return (
         <HandlerContext.Provider value={{ runNode, resetNodeAndDownstream }}>
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-                <GlobalMessage />
             {/* Main Content */}
                 <div className="flex flex-col h-screen">
                     {/* Flow Container */}
@@ -934,7 +964,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         </h1>
                     </div>
                 </div>
-                        <div className="h-[calc(100vh-180px)]">
+                        <div className="h-[calc(100vh-180px)] bg-gradient-to-br from-gray-100 to-gray-200">
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
@@ -950,15 +980,15 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 panOnDrag={false}
                                 zoomOnScroll={false}
                                 preventScrolling={true}
-                                className="bg-slate-900"
+                                className="bg-transparent"
                                 selectNodesOnDrag={false}
                                 onSelectionChange={onSelectionChange}
                                 multiSelectionKeyCode="Control"
                             >
                                 <Background 
-                                    color="#475569"
+                                    color="#e5e7eb"
                                     gap={20}
-                                    className="bg-slate-900"
+                                    className="bg-transparent"
                                 />
                                 <Controls className="bg-slate-800 border border-slate-700/50 rounded-lg" />
                     </ReactFlow>
