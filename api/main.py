@@ -53,6 +53,10 @@ class NodeType(str, Enum):
     APPLY_RULES = "apply_rules"
     OUTPUT_RULES = "output_rules"
     BREAK_ROLLING = "break_rolling"
+    PRE_HARMONISATION_SRC = "pre_harmonisation_src"
+    PRE_HARMONISATION_TGT = "pre_harmonisation_tgt"
+    ENRICHMENT_FILE_SEARCH_SRC = "enrichment_file_search_src"
+    ENRICHMENT_FILE_SEARCH_TGT = "enrichment_file_search_tgt"
 
 class RunParameters(BaseModel):
     expectedRunDate: str
@@ -207,6 +211,14 @@ def process_node(node_id: str, params: RunParameters, previous_outputs: Optional
         return process_file_search_node(params, previous_outputs, "src")
     elif node_id == "file_searching_tgt":
         return process_file_search_node(params, previous_outputs, "tgt")
+    elif node_id == "pre_harmonisation_src":
+        return process_pre_harmonisation_node(params, previous_outputs, "src")
+    elif node_id == "pre_harmonisation_tgt":
+        return process_pre_harmonisation_node(params, previous_outputs, "tgt")
+    elif node_id == "enrichment_file_search_src":
+        return process_enrichment_file_search_node(params, previous_outputs, "src")
+    elif node_id == "enrichment_file_search_tgt":
+        return process_enrichment_file_search_node(params, previous_outputs, "tgt")
     elif "harmonisation" in node_id:
         return process_harmonisation_node(params, previous_outputs)
     elif "enrichment" in node_id:
@@ -283,6 +295,43 @@ def process_file_search_node(params: RunParameters, previous_outputs: Optional[D
             "config_validation": config_validation
         }
     }
+
+def process_pre_harmonisation_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]], flow_type: str) -> Dict:
+    """Process pre-harmonisation node for either SRC or TGT flow.
+    
+    This node performs initial data standardization before the main harmonisation:
+    1. Basic data type validation
+    2. Initial format standardization
+    3. Preliminary data quality checks
+    """
+    logger.info(f"Processing pre-harmonisation for {flow_type.upper()} flow")
+    
+    try:
+        # Get previous node output
+        prev_node_id = f"file_searching_{flow_type}"
+        if not previous_outputs or prev_node_id not in previous_outputs:
+            raise ValueError(f"No input data from {prev_node_id}")
+            
+        input_data = previous_outputs[prev_node_id]
+        
+        # Simulate pre-harmonisation processing
+        output = {
+            "standardized_data": input_data,
+            "data_quality_metrics": {
+                "missing_values": 0,
+                "invalid_formats": 0,
+                "standardization_applied": True
+            },
+            "flow_type": flow_type,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        logger.info(f"✅ Pre-harmonisation completed for {flow_type.upper()} flow")
+        return output
+        
+    except Exception as e:
+        logger.error(f"❌ Error in pre-harmonisation node: {str(e)}")
+        raise
 
 def process_harmonisation_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
     return {
@@ -417,6 +466,48 @@ def process_generic_node(params: RunParameters) -> Dict:
             "environment": params.runEnv
         }
     }
+
+def process_enrichment_file_search_node(params: RunParameters, previous_outputs: Optional[Dict[str, Any]], flow_type: str) -> Dict:
+    """Process enrichment file search node for either SRC or TGT flow.
+    
+    This node searches for enrichment files based on the harmonized data:
+    1. Identifies required enrichment files
+    2. Validates file existence and format
+    3. Prepares files for enrichment process
+    """
+    logger.info(f"Processing enrichment file search for {flow_type.upper()} flow")
+    
+    try:
+        # Get previous node output (harmonisation)
+        prev_node_id = f"harmonisation_{flow_type}"
+        if not previous_outputs or prev_node_id not in previous_outputs:
+            raise ValueError(f"No input data from {prev_node_id}")
+            
+        harmonised_data = previous_outputs[prev_node_id]
+        
+        # Simulate enrichment file search processing
+        output = {
+            "enrichment_files": {
+                "reference_data": f"/path/to/{flow_type}/reference_data.csv",
+                "lookup_tables": [
+                    f"/path/to/{flow_type}/lookup1.csv",
+                    f"/path/to/{flow_type}/lookup2.csv"
+                ]
+            },
+            "file_validation": {
+                "all_files_exist": True,
+                "valid_formats": True
+            },
+            "flow_type": flow_type,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        logger.info(f"✅ Enrichment file search completed for {flow_type.upper()} flow")
+        return output
+        
+    except Exception as e:
+        logger.error(f"❌ Error in enrichment file search node: {str(e)}")
+        raise
 
 def validate_config_file(file_path: str, pattern: str) -> bool:
     # Add your config file validation logic here

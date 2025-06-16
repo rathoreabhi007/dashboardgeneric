@@ -53,86 +53,114 @@ const initialNodes: Node[] = [
         id: 'file_searching_src',
         type: 'custom',
         data: { fullName: 'File_Searching_SRC', status: 'idle' },
-        position: { x: 300, y: 100 },
+        position: { x: 300, y: 80 },
         draggable: false
     },
     {
         id: 'file_searching_tgt',
         type: 'custom',
         data: { fullName: 'File_Searching_TGT', status: 'idle' },
-        position: { x: 300, y: 400 },
+        position: { x: 300, y: 420 },
         draggable: false
     },
     // Top flow nodes (SRC)
     {
+        id: 'pre_harmonisation_src',
+        type: 'custom',
+        data: { fullName: 'Reading & Pre-Harmonisation_SRC', status: 'idle' },
+        position: { x: 500, y: 80 },
+        draggable: false
+    },
+    {
         id: 'harmonisation_src',
         type: 'custom',
         data: { fullName: 'Harmonisation_SRC', status: 'idle' },
-        position: { x: 500, y: 100 },
+        position: { x: 700, y: 80 },
+        draggable: false
+    },
+    {
+        id: 'enrichment_file_search_src',
+        type: 'custom',
+        data: { fullName: 'Enrichment File Search_SRC', status: 'idle' },
+        position: { x: 900, y: 80 },
         draggable: false
     },
     {
         id: 'src_enrichment',
         type: 'custom',
         data: { fullName: 'SRC Enrichment', status: 'idle' },
-        position: { x: 700, y: 100 },
+        position: { x: 1100, y: 80 },
         draggable: false
     },
     {
         id: 'data_transform',
         type: 'custom',
         data: { fullName: 'Data Transform Post Enrichment', status: 'idle' },
-        position: { x: 900, y: 100 },
+        position: { x: 1300, y: 80 },
         draggable: false
     },
     {
         id: 'combine_data',
         type: 'custom',
         data: { fullName: 'Combine SRC and TGT Data', status: 'idle' },
-        position: { x: 900, y: 250 },
+        position: { x: 1500, y: 250 },
         draggable: false
     },
     {
         id: 'apply_rules',
         type: 'custom',
         data: { fullName: 'Apply Rec Rules & Break Explain', status: 'idle' },
-        position: { x: 1100, y: 250 },
+        position: { x: 1700, y: 250 },
         draggable: false
     },
     {
         id: 'output_rules',
         type: 'custom',
         data: { fullName: 'Output Rules', status: 'idle' },
-        position: { x: 1300, y: 250 },
+        position: { x: 1900, y: 250 },
         draggable: false
     },
     {
         id: 'break_rolling',
         type: 'custom',
         data: { fullName: 'BreakRolling Details', status: 'idle' },
-        position: { x: 1500, y: 250 },
+        position: { x: 2100, y: 250 },
         draggable: false
     },
     // Bottom flow nodes (TGT)
     {
+        id: 'pre_harmonisation_tgt',
+        type: 'custom',
+        data: { fullName: 'Reading & Pre-Harmonisation_TGT', status: 'idle' },
+        position: { x: 500, y: 420 },
+        draggable: false
+    },
+    {
         id: 'harmonisation_tgt',
         type: 'custom',
         data: { fullName: 'Harmonisation_TGT', status: 'idle' },
-        position: { x: 500, y: 400 },
+        position: { x: 700, y: 420 },
+        draggable: false
+    },
+    {
+        id: 'enrichment_file_search_tgt',
+        type: 'custom',
+        data: { fullName: 'Enrichment File Search_TGT', status: 'idle' },
+        position: { x: 900, y: 420 },
         draggable: false
     },
     {
         id: 'tgt_enrichment',
         type: 'custom',
         data: { fullName: 'TGT Enrichment', status: 'idle' },
-        position: { x: 700, y: 400 },
+        position: { x: 1100, y: 420 },
         draggable: false
     },
     {
         id: 'tgt_data_transform',
         type: 'custom',
         data: { fullName: 'Data Transform Post Enrichment', status: 'idle' },
-        position: { x: 900, y: 400 },
+        position: { x: 1300, y: 420 },
         draggable: false
     }
 ];
@@ -160,19 +188,37 @@ const initialEdges: Edge[] = [
     },
     // Top flow edges (SRC)
     {
-        id: 'file-search-to-harmonisation-src',
+        id: 'file-search-to-pre-harmonisation-src',
         source: 'file_searching_src',
-        target: 'harmonisation_src',
+        target: 'pre_harmonisation_src',
         sourceHandle: 'file_searching_src-source',
+        targetHandle: 'pre_harmonisation_src-target',
+        animated: false,
+        style: { stroke: '#1e293b', strokeWidth: 2 }
+    },
+    {
+        id: 'pre-harmonisation-to-harmonisation-src',
+        source: 'pre_harmonisation_src',
+        target: 'harmonisation_src',
+        sourceHandle: 'pre_harmonisation_src-source',
         targetHandle: 'harmonisation_src-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
-        id: 'harmonisation-to-enrichment',
+        id: 'harmonisation-to-enrichment-search-src',
         source: 'harmonisation_src',
-        target: 'src_enrichment',
+        target: 'enrichment_file_search_src',
         sourceHandle: 'harmonisation_src-source',
+        targetHandle: 'enrichment_file_search_src-target',
+        animated: false,
+        style: { stroke: '#1e293b', strokeWidth: 2 }
+    },
+    {
+        id: 'enrichment-search-to-enrichment-src',
+        source: 'enrichment_file_search_src',
+        target: 'src_enrichment',
+        sourceHandle: 'enrichment_file_search_src-source',
         targetHandle: 'src_enrichment-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
@@ -197,19 +243,37 @@ const initialEdges: Edge[] = [
     },
     // Bottom flow edges (TGT)
     {
-        id: 'file-search-to-harmonisation-tgt',
+        id: 'file-search-to-pre-harmonisation-tgt',
         source: 'file_searching_tgt',
-        target: 'harmonisation_tgt',
+        target: 'pre_harmonisation_tgt',
         sourceHandle: 'file_searching_tgt-source',
+        targetHandle: 'pre_harmonisation_tgt-target',
+        animated: false,
+        style: { stroke: '#1e293b', strokeWidth: 2 }
+    },
+    {
+        id: 'pre-harmonisation-to-harmonisation-tgt',
+        source: 'pre_harmonisation_tgt',
+        target: 'harmonisation_tgt',
+        sourceHandle: 'pre_harmonisation_tgt-source',
         targetHandle: 'harmonisation_tgt-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
-        id: 'harmonisation-to-enrichment-tgt',
+        id: 'harmonisation-to-enrichment-search-tgt',
         source: 'harmonisation_tgt',
-        target: 'tgt_enrichment',
+        target: 'enrichment_file_search_tgt',
         sourceHandle: 'harmonisation_tgt-source',
+        targetHandle: 'enrichment_file_search_tgt-target',
+        animated: false,
+        style: { stroke: '#1e293b', strokeWidth: 2 }
+    },
+    {
+        id: 'enrichment-search-to-enrichment-tgt',
+        source: 'enrichment_file_search_tgt',
+        target: 'tgt_enrichment',
+        sourceHandle: 'enrichment_file_search_tgt-source',
         targetHandle: 'tgt_enrichment-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
@@ -327,7 +391,7 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
         return [
             "w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 relative",
             "before:absolute before:inset-0 before:rounded-full before:border before:border-black",
-            "after:absolute after:inset-[3px] after:rounded-full after:bg-slate-800"
+            "after:absolute after:inset-[3px] after:rounded-full after:bg-slate-600"
         ].join(" ");
     };
 
