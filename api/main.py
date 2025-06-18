@@ -188,17 +188,14 @@ async def reset_process(process_id: str):
 
 async def process_node_async(process_id: str, node_id: str, params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None):
     try:
-        # Simulate processing time based on node type
-        processing_time = random.uniform(2, 5)
-        await asyncio.sleep(processing_time)
-        
+        logger.info(f"[START] Node {node_id} (Process {process_id}) started at {datetime.now().isoformat()}")
+        # Simulate processing time (45 seconds)
+        await asyncio.sleep(45)
         output = process_node(node_id, params, previous_outputs)
         processes[process_id].status = "completed"
         processes[process_id].output = output
-        
-        logger.info(f"✅ Node {node_id} (Process {process_id}) completed successfully")
+        logger.info(f"[END] Node {node_id} (Process {process_id}) completed at {datetime.now().isoformat()}")
         logger.info(f"📤 Output: {output}")
-        
     except Exception as e:
         logger.error(f"❌ Error processing node {node_id}: {str(e)}")
         processes[process_id].status = "failed"

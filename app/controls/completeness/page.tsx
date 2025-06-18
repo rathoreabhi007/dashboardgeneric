@@ -22,7 +22,7 @@ import { buildDependencyMap, buildDownstreamMap, runNodeWithDependencies, getAll
 import { HandlerContext, HandlerContextType } from '@/app/controls/completeness/HandlerContext';
 
 // Node status types
-type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'standby';
+type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'standby' | 'stopped';
 
 // Add these styles at the top of the file after imports
 const styles = {
@@ -343,8 +343,8 @@ type LocalRunParameters = {
 };
 
 // Define the CustomNode component outside the main component
-const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: { 
-    data: any; 
+const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
+    data: any;
     id: string;
     nodeOutputs: { [key: string]: any };
     setSelectedNode: (node: any) => void;
@@ -396,7 +396,7 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
     };
 
     return (
-        <div 
+        <div
             className="relative flex flex-col items-center"
             style={nodeStyle}
             onMouseEnter={() => setIsHovered(true)}
@@ -430,8 +430,8 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
                     onMouseLeave={() => setShowTooltip(false)}
                     className={`flex items-center gap-0.5 px-1.5 py-1 rounded text-[8px] relative
                         ${!canRun
-                        ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
-                        : 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
+                            ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-400'
+                            : 'bg-slate-800 hover:bg-slate-700 text-emerald-400'
                         }`}
                 >
                     <FaPlay className="w-1.5 h-1.5" />
@@ -489,19 +489,33 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const [bottomBarHeight, setBottomBarHeight] = useState(96);
     const [isResizingBottom, setIsResizingBottom] = useState(false);
     const [selectedNode, setSelectedNode] = useState<any>(null);
-    const [areParamsApplied, setAreParamsApplied] = useState(false);
+    const [areParamsApplied, setAreParamsApplied] = useState(() => {
+        const saved = localStorage.getItem('validatedParams');
+        if (!saved) return false;
+        try {
+            const params = JSON.parse(saved);
+            return Object.values(params).every(v => v && String(v).trim() !== '');
+        } catch {
+            return false;
+        }
+    });
     const resizeRef = useRef<HTMLDivElement>(null);
     const minWidth = 48;
     const maxWidth = 800;
     const minHeight = 32;
     const nodeTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
-    const [runParams, setRunParams] = useState<LocalRunParameters>({
-        expectedRunDate: '',
-        inputConfigFilePath: '',
-        inputConfigFilePattern: '',
-        rootFileDir: '',
-        runEnv: '',
-        tempFilePath: ''
+    const [runParams, setRunParams] = useState<LocalRunParameters>(() => {
+        const saved = localStorage.getItem('validatedParams');
+        return saved
+            ? JSON.parse(saved)
+            : {
+                expectedRunDate: '',
+                inputConfigFilePath: '',
+                inputConfigFilePattern: '',
+                rootFileDir: '',
+                runEnv: '',
+                tempFilePath: ''
+            };
     });
     const [processIds, setProcessIds] = useState<{ [key: string]: string }>({});
     const [isRunningAll, setIsRunningAll] = useState(false);
@@ -519,15 +533,37 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         message: 'Please fill all required parameters'
     });
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes.map(node => ({
-        ...node,
-        data: {
-            ...node.data,
-            areParamsApplied,
-            nodeOutputs,
-            setSelectedNode
+    // Restore nodes from localStorage if available, otherwise use initialNodes
+    const restoredNodes = (() => {
+        const saved = localStorage.getItem('nodes');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch {
+                // fallback to initialNodes
+            }
         }
-    })));
+        return initialNodes.map(node => ({
+            ...node,
+            data: {
+                ...node.data,
+                areParamsApplied,
+                nodeOutputs,
+                setSelectedNode
+            }
+        }));
+    })();
+    const [nodes, setNodes, onNodesChange] = useNodesState(
+        restoredNodes.map((node: Node) => ({
+            ...node,
+            data: {
+                ...node.data,
+                areParamsApplied,
+                nodeOutputs,
+                setSelectedNode
+            }
+        }))
+    );
 
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -544,7 +580,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     const updateNodeStatus = useCallback((nodeId: string, status: NodeStatus) => {
         console.log(`Node ${nodeId} status updated to: ${status}`);
-        
+
         // Update node status
         setNodes(nds => nds.map(node =>
             node.id === nodeId
@@ -588,12 +624,12 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const handleParamChange = (param: string, value: string) => {
         // Clean the input value by trimming whitespace
         const cleanValue = value.trim();
-        
+
         setRunParams(prev => ({
             ...prev,
             [param]: cleanValue
         }));
-        
+
         // Clear the error state for this field when user types
         if (invalidFields.has(param)) {
             const newInvalidFields = new Set(invalidFields);
@@ -605,7 +641,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const validateParameters = useCallback(() => {
         const newInvalidFields = new Set<string>();
         let hasErrors = false;
-        
+
         // Check each parameter for empty or whitespace-only values
         Object.entries(runParams).forEach(([key, value]) => {
             if (!value || (typeof value === 'string' && value.trim() === '')) {
@@ -614,9 +650,9 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 console.log(`❌ Validation Error: ${key} is empty or contains only whitespace`);
             }
         });
-        
+
         setInvalidFields(newInvalidFields);
-        
+
         setParamValidation({
             isValid: !hasErrors,
             message: hasErrors ? 'Please fill in all required fields' : 'Parameters are valid'
@@ -631,7 +667,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             localStorage.removeItem('validatedParams');
             setAreParamsApplied(false);
         }
-        
+
         return !hasErrors;
     }, [runParams]);
 
@@ -733,7 +769,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
         // Clear selected nodes
         setSelectedNodes(new Set());
-        
+
         // Clear selected node in output panel
         setSelectedNode(null);
 
@@ -781,7 +817,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 if (node?.data.onRun) {
                     await new Promise<void>((resolve, reject) => {
                         let checkInterval: NodeJS.Timeout;
-                        
+
                         const checkStatus = () => {
                             const currentNode = nodes.find(n => n.id === nodeId);
                             if (currentNode?.data.status === 'completed') {
@@ -847,7 +883,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const onSelectionChange = useCallback(({ nodes: selectedNodesArr }: { nodes: Node[] }) => {
         const selectedIds = new Set(selectedNodesArr.map(n => n.id));
         setSelectedNodes(selectedIds);
-        
+
         // Update nodes with selection state
         setNodes(nds => nds.map(node => ({
             ...node,
@@ -873,9 +909,32 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         }
     }, [setNodes, nodeOutputs]);
 
-    // Helper: run a single node (original runNode logic, minus dependency checks)
-    const runSingleNode = async (nodeId: string) => {
-        // Check if parameters have been applied
+    // Refactored runNodeWithDependencies to pass previousOutputs down the chain
+    async function runNodeWithDependencies(
+        nodeId: string,
+        runNodeFn: (id: string, previousOutputs: any) => Promise<any>,
+        dependencyMap: Record<string, string[]>,
+        nodeStatusMap: Record<string, string>,
+        nodeOutputs: Record<string, any>,
+        alreadyRun: Set<string> = new Set(),
+        path: string[] = []
+    ): Promise<any> {
+        if (alreadyRun.has(nodeId) || nodeStatusMap[nodeId] === 'completed') return nodeOutputs[nodeId];
+        if (path.includes(nodeId)) throw new Error(`Cycle detected: ${[...path, nodeId].join(' -> ')}`);
+        const deps = dependencyMap[nodeId] || [];
+        let prevOutputs = { ...nodeOutputs };
+        for (let dep of deps) {
+            const depOutput = await runNodeWithDependencies(dep, runNodeFn, dependencyMap, nodeStatusMap, prevOutputs, alreadyRun, [...path, nodeId]);
+            prevOutputs[dep] = depOutput;
+        }
+        // Now run the node, passing prevOutputs
+        const output = await runNodeFn(nodeId, prevOutputs);
+        alreadyRun.add(nodeId);
+        return output;
+    }
+
+    // Helper: run a single node and wait for completion, now accepts previousOutputs
+    const runNodeAndWait = async (nodeId: string, previousOutputs: any) => {
         if (!areParamsApplied) {
             console.log('❌ Cannot run node: Parameters have not been applied');
             return;
@@ -888,7 +947,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         }
         try {
             const params = JSON.parse(storedParams) as LocalRunParameters;
-            const hasEmptyFields = Object.values(params).some(value => 
+            const hasEmptyFields = Object.values(params).some(value =>
                 !value || (typeof value === 'string' && value.trim() === '')
             );
             if (hasEmptyFields) {
@@ -905,21 +964,22 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 return;
             }
             updateNodeStatus(nodeId, 'running');
-            const prevOutputs = { ...nodeOutputs };
             const request = {
                 nodeId,
                 parameters: params,
-                previousOutputs: prevOutputs,
+                previousOutputs,
                 timestamp: new Date().toISOString()
             };
             const response = await ApiService.startCalculation(request);
+            let nodeOutput = null;
             if (response.process_id) {
                 setProcessIds(prev => ({ ...prev, [nodeId]: response.process_id }));
-                const pollInterval = setInterval(async () => {
+                // Poll for completion
+                let finished = false;
+                while (!finished) {
                     try {
                         const status = await ApiService.getProcessStatus(response.process_id);
                         if (status.status === 'completed' || status.status === 'failed') {
-                            clearInterval(pollInterval);
                             updateNodeStatus(nodeId, status.status);
                             if (status.status === 'completed' && status.output) {
                                 setNodeOutputs(prev => {
@@ -927,42 +987,47 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                     localStorage.setItem('nodeOutputs', JSON.stringify(updated));
                                     return updated;
                                 });
+                                nodeOutput = status.output;
                             }
+                            finished = true;
+                        } else {
+                            await new Promise(res => setTimeout(res, 1000));
                         }
                     } catch (error) {
-                        clearInterval(pollInterval);
                         updateNodeStatus(nodeId, 'failed');
+                        finished = true;
                     }
-                }, 1000);
-                nodeTimeouts.current[nodeId] = pollInterval;
+                }
             }
+            return nodeOutput;
         } catch (error) {
             updateNodeStatus(nodeId, 'failed');
         }
     };
 
-    // Chain-dependency aware node runner
+    // Chain-dependency aware node runner (now uses refactored runNodeWithDependencies)
     const runNode = useCallback(async (nodeId: string) => {
         try {
             await runNodeWithDependencies(
                 nodeId,
-                runSingleNode,
+                runNodeAndWait,
                 dependencyMap,
-                nodeStatusMap
+                nodeStatusMap,
+                nodeOutputs
             );
         } catch (err) {
             alert(err instanceof Error ? err.message : String(err));
         }
-    }, [dependencyMap, nodeStatusMap, runSingleNode]);
+    }, [dependencyMap, nodeStatusMap, runNodeAndWait, nodeOutputs]);
 
     // Downstream reset logic
     const resetNodeAndDownstream = useCallback(async (nodeId: string) => {
         const toReset = Array.from(getAllDownstreamNodes(nodeId, downstreamMap));
-        
+
         // Reset nodes
         for (const id of toReset) {
             if (processIds[id]) {
-                try { await ApiService.resetProcess(processIds[id]); } catch {}
+                try { await ApiService.resetProcess(processIds[id]); } catch { }
             }
             if (nodeTimeouts.current[id]) {
                 clearInterval(nodeTimeouts.current[id] as any);
@@ -1006,18 +1071,51 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     // Define nodeTypes with the required props
     const nodeTypes = useMemo(() => ({
         custom: (props: any) => (
-            <CustomNode 
-                {...props} 
+            <CustomNode
+                {...props}
                 nodeOutputs={nodeOutputs}
                 setSelectedNode={setSelectedNode}
             />
         )
     }), [nodeOutputs, setSelectedNode]);
 
+    // Persist nodes to localStorage whenever they change
+    useEffect(() => {
+        localStorage.setItem('nodes', JSON.stringify(nodes));
+    }, [nodes]);
+
+    // Add the onStop handler
+    const onStop = useCallback(async (nodeId: string) => {
+        const processId = processIds[nodeId];
+        if (!processId) {
+            console.warn(`No processId found for node ${nodeId}`);
+            return;
+        }
+        try {
+            await ApiService.stopProcess(processId);
+            updateNodeStatus(nodeId, 'stopped');
+        } catch (error) {
+            console.error(`Failed to stop process for node ${nodeId}:`, error);
+        }
+    }, [processIds, updateNodeStatus]);
+
+    // Inject onStop into node data after both are defined
+    useEffect(() => {
+        setNodes(nds =>
+            nds.map(node => ({
+                ...node,
+                data: {
+                    ...node.data,
+                    onStop
+                }
+            }))
+        );
+    }, [onStop, setNodes]);
+
     return (
         <HandlerContext.Provider value={{ runNode, resetNodeAndDownstream }}>
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-            {/* Main Content */}
+                {/* Main Content */}
                 <div className="flex flex-col h-screen">
                     {/* Flow Container */}
                     <div className="flex-1 overflow-hidden">
@@ -1025,21 +1123,21 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             <div className="flex justify-center">
                                 <h1 className="text-2xl font-semibold text-emerald-400">
                                     Generic Completeness Control
-                        </h1>
-                    </div>
-                </div>
+                                </h1>
+                            </div>
+                        </div>
                         <div className="h-[calc(100vh-180px)] bg-gradient-to-br from-gray-100 to-gray-200">
-                    <ReactFlow
-                        nodes={nodes}
-                        edges={edges}
-                        onNodesChange={onNodesChange}
-                        onEdgesChange={onEdgesChange}
-                        onConnect={onConnect}
+                            <ReactFlow
+                                nodes={nodes}
+                                edges={edges}
+                                onNodesChange={onNodesChange}
+                                onEdgesChange={onEdgesChange}
+                                onConnect={onConnect}
                                 nodeTypes={nodeTypes}
-                        connectionMode={ConnectionMode.Loose}
-                        fitView
-                        minZoom={0.5}
-                        maxZoom={2}
+                                connectionMode={ConnectionMode.Loose}
+                                fitView
+                                minZoom={0.5}
+                                maxZoom={2}
                                 nodesDraggable={false}
                                 panOnDrag={false}
                                 zoomOnScroll={false}
@@ -1049,34 +1147,34 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 onSelectionChange={onSelectionChange}
                                 multiSelectionKeyCode="Control"
                             >
-                                <Background 
+                                <Background
                                     color="#e5e7eb"
                                     gap={20}
                                     className="bg-transparent"
                                 />
                                 <Controls className="bg-slate-800 border border-slate-700/50 rounded-lg" />
-                    </ReactFlow>
-                </div>
-            </div>
+                            </ReactFlow>
+                        </div>
+                    </div>
 
                     {/* Bottom Output Bar with Resize Handle */}
-                    <div 
+                    <div
                         className="relative bg-slate-800/95 border-t border-slate-700/50"
                         style={{ height: `${bottomBarHeight}px`, minHeight: '120px', maxHeight: '50vh' }}
                     >
-            {/* Resize Handle */}
-            <div
-                className={`
+                        {/* Resize Handle */}
+                        <div
+                            className={`
                                 absolute -top-1 left-0 w-full h-2 cursor-row-resize z-10
                                 ${isResizingBottom ? 'bg-emerald-500' : 'bg-transparent hover:bg-emerald-500/30'}
                     transition-colors
                 `}
-                onMouseDown={(e) => {
-                    e.preventDefault();
+                            onMouseDown={(e) => {
+                                e.preventDefault();
                                 setIsResizingBottom(true);
-                }}
-            >
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                            }}
+                        >
+                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                                 <FaGripLines className="text-emerald-400/70" />
                             </div>
                         </div>
@@ -1087,7 +1185,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 <div className="flex-1 text-sm text-slate-300 h-full overflow-hidden">
                                     <div className="flex items-center justify-between h-8 border-b border-slate-700/50">
                                         <span className="text-emerald-400 font-medium">{selectedNode.data?.fullName || selectedNode.fullName} Output</span>
-                                        <button 
+                                        <button
                                             onClick={() => setSelectedNode(null)}
                                             className="text-slate-400 hover:text-slate-300 text-xs"
                                         >
@@ -1098,12 +1196,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                         {/* Status */}
                                         <div>
                                             <span className="text-emerald-400 font-medium">Status: </span>
-                                            <span className={`px-2 py-1 rounded-full text-xs ${
-                                                selectedNode.data.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                                            <span className={`px-2 py-1 rounded-full text-xs ${selectedNode.data.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
                                                 selectedNode.data.status === 'failed' ? 'bg-red-500/20 text-red-400' :
-                                                selectedNode.data.status === 'running' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                'bg-slate-500/20 text-slate-400'
-                                            }`}>
+                                                    selectedNode.data.status === 'running' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                        'bg-slate-500/20 text-slate-400'
+                                                }`}>
                                                 {selectedNode.data.status}
                                             </span>
                                         </div>
@@ -1156,23 +1253,23 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 </div>
                             )}
                         </div>
+                    </div>
                 </div>
-            </div>
 
-            {/* Right Sidebar */}
-            <div
-                ref={resizeRef}
-                className={`
+                {/* Right Sidebar */}
+                <div
+                    ref={resizeRef}
+                    className={`
                         fixed right-0 top-0 h-full bg-slate-800/95 border-l border-slate-700/50
                     transition-all duration-300 ease-in-out
                     ${!isSidebarOpen ? 'w-12' : ''}
                 `}
-                style={{
-                    width: isSidebarOpen ? `${sidebarWidth}px` : '48px',
-                    transition: isResizing ? 'none' : undefined
-                }}
-                onDoubleClick={() => !isResizing && setIsSidebarOpen(!isSidebarOpen)}
-            >
+                    style={{
+                        width: isSidebarOpen ? `${sidebarWidth}px` : '48px',
+                        transition: isResizing ? 'none' : undefined
+                    }}
+                    onDoubleClick={() => !isResizing && setIsSidebarOpen(!isSidebarOpen)}
+                >
                     {/* Resize Handle */}
                     <div
                         className={`
@@ -1183,56 +1280,56 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         onMouseDown={(e) => {
                             e.preventDefault();
                             setIsResizing(true);
-                            
+
                             const startX = e.pageX;
                             const startWidth = sidebarWidth;
-                            
+
                             const handleMouseMove = (moveEvent: MouseEvent) => {
                                 const deltaX = startX - moveEvent.pageX;
                                 const newWidth = Math.min(Math.max(startWidth + deltaX, minWidth), maxWidth);
                                 setSidebarWidth(newWidth);
                             };
-                            
+
                             const handleMouseUp = () => {
                                 document.removeEventListener('mousemove', handleMouseMove);
                                 document.removeEventListener('mouseup', handleMouseUp);
                                 setIsResizing(false);
                             };
-                            
+
                             document.addEventListener('mousemove', handleMouseMove);
                             document.addEventListener('mouseup', handleMouseUp);
                         }}
                     />
 
-                <div className={`
+                    <div className={`
                         flex items-center h-16 px-4 border-b border-slate-700/50
                     ${isSidebarOpen ? 'justify-between' : 'justify-center'}
                 `}>
-                    {isSidebarOpen && (
+                        {isSidebarOpen && (
                             <span className="text-emerald-400 font-medium">
-                            Run Parameters
-                        </span>
-                    )}
-                    <FaChevronLeft
-                        className={`
+                                Run Parameters
+                            </span>
+                        )}
+                        <FaChevronLeft
+                            className={`
                                 text-emerald-400/70 cursor-pointer transition-transform duration-300 hover:text-emerald-300
                             ${isSidebarOpen ? '' : 'rotate-180'}
                         `}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsSidebarOpen(!isSidebarOpen);
-                        }}
-                    />
-                </div>
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsSidebarOpen(!isSidebarOpen);
+                            }}
+                        />
+                    </div>
 
                     {/* Sidebar Content */}
-                {isSidebarOpen && (
+                    {isSidebarOpen && (
                         <div className="p-6 text-slate-300 overflow-y-auto max-h-[calc(100vh-4rem)]">
                             <div className="space-y-6">
                                 {/* Form fields with updated styling */}
-                        <div className="space-y-4">
+                                <div className="space-y-4">
                                     {renderParameterInputs()}
-                            </div>
+                                </div>
 
                                 {/* Buttons Container */}
                                 <div className="pt-6 flex gap-4">
@@ -1246,9 +1343,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                     </button>
                                     {/* Validation Message */}
                                     {paramValidation.message && (
-                                        <p className={`mt-2 text-sm ${
-                                            paramValidation.isValid ? 'text-emerald-400' : 'text-red-400'
-                                        }`}>
+                                        <p className={`mt-2 text-sm ${paramValidation.isValid ? 'text-emerald-400' : 'text-red-400'
+                                            }`}>
                                             {paramValidation.message}
                                         </p>
                                     )}
@@ -1257,13 +1353,13 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                         disabled={isRunningAll}
                                         className={`flex-1 px-4 py-3 text-white rounded-lg text-sm font-medium transition-colors 
                                         shadow-lg shadow-blue-900/20 focus:ring-2 focus:ring-blue-500/50 
-                                        active:transform active:scale-[0.98] ${isRunningAll 
-                                            ? 'bg-blue-400 cursor-not-allowed'
-                                            : 'bg-blue-600 hover:bg-blue-500'}`}
+                                        active:transform active:scale-[0.98] ${isRunningAll
+                                                ? 'bg-blue-400 cursor-not-allowed'
+                                                : 'bg-blue-600 hover:bg-blue-500'}`}
                                     >
                                         {isRunningAll ? 'Running...' : 'Run All'}
                                     </button>
-                            </div>
+                                </div>
 
                                 {/* Reset All Button */}
                                 <div className="pt-2">
@@ -1274,29 +1370,29 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                         focus:ring-slate-500/50 active:transform active:scale-[0.98]"
                                     >
                                         Reset All Nodes
-                                </button>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Collapsed state indicator */}
-                {!isSidebarOpen && (
-                    <div
+                    {/* Collapsed state indicator */}
+                    {!isSidebarOpen && (
+                        <div
                             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-emerald-400/70 vertical-text"
-                    >
-                        <style jsx>{`
+                        >
+                            <style jsx>{`
                             .vertical-text {
                                 writing-mode: vertical-rl;
                                 text-orientation: mixed;
                                 transform: rotate(180deg);
                             }
                         `}</style>
-                        Run Parameters
-                    </div>
-                )}
+                            Run Parameters
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
         </HandlerContext.Provider>
     );
 } 
