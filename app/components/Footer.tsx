@@ -1,6 +1,6 @@
 const Footer = () => {
     return (
-        <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-t border-slate-800">
+        <footer className="relative border-t border-slate-800" style={{ backgroundColor: '#343434' }}>
             <div className="absolute inset-0 -z-10 transform-gpu overflow-hidden blur-3xl">
                 <div className="relative aspect-[1155/678] w-full bg-gradient-to-tr from-emerald-400 to-cyan-400 opacity-20" />
             </div>
