@@ -27,14 +27,14 @@ type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'standby' | 'sto
 // Add these styles at the top of the file after imports
 const styles = {
     selectedNode: {
-        border: '2px solid #10b981',
-        boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)',
+        border: '2px solid #334155',
+        boxShadow: '0 0 0 2px rgba(51, 65, 85, 0.2)',
         transform: 'scale(1.02)',
         transition: 'all 0.2s ease'
     },
     hoveredNode: {
-        border: '2px solid #10b981',
-        boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.1)',
+        border: '2px solid #334155',
+        boxShadow: '0 0 0 2px rgba(51, 65, 85, 0.1)',
         transform: 'scale(1.01)',
         transition: 'all 0.2s ease'
     }
@@ -353,7 +353,7 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
     const [isHovered, setIsHovered] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
     const isRunning = data.status === 'running';
-    const canReset = data.status === 'failed' || data.status === 'completed';
+    const canReset = data.status === 'failed' || data.status === 'completed' || data.status === 'stopped';
     const isSelected = data.selected || false;
     const canRun = data.areParamsApplied && !isRunning;
 
@@ -391,7 +391,7 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
         return [
             "w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 relative",
             "before:absolute before:inset-0 before:rounded-full before:border before:border-black",
-            "after:absolute after:inset-[3px] after:rounded-full after:bg-slate-600"
+            "after:absolute after:inset-[3px] after:rounded-full"
         ].join(" ");
     };
 
@@ -409,14 +409,31 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
             <Handle
                 type="target"
                 position={Position.Left}
-                style={{ background: '#10b981', width: '8px', height: '8px', cursor: 'pointer' }}
+                style={{ background: '#334155', width: '8px', height: '8px', cursor: 'pointer' }}
                 id={`${id}-target`}
             />
             <div className={getIconContainerStyle()}>
-                {data.status === 'running' && <FaSpinner className="animate-spin text-yellow-400 w-5 h-5 relative z-10" />}
-                {data.status === 'completed' && <FaCheckCircle className="text-green-400 w-5 h-5 relative z-10" />}
-                {data.status === 'failed' && <FaTimesCircle className="text-red-400 w-5 h-5 relative z-10" />}
-                {data.status === 'standby' && <FaCircle className="text-white/80 w-5 h-5 relative z-10" />}
+                <img
+                    src="/nodeimage.jpg"
+                    alt="Node"
+                    className="absolute inset-[3px] w-[calc(100%-6px)] h-[calc(100%-6px)] rounded-full object-cover"
+                />
+            </div>
+            {/* Status badge below the node */}
+            <div className="flex justify-center w-full">
+                <div className={`relative -mt-3 z-20 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-md
+                    ${data.status === 'completed' ? 'bg-green-500' :
+                        data.status === 'failed' ? 'bg-red-500' :
+                            data.status === 'running' ? 'bg-yellow-400' :
+                                data.status === 'stopped' ? 'bg-red-500' :
+                                    'bg-slate-400'}
+                `}>
+                    {data.status === 'running' && <FaSpinner className="animate-spin text-white w-3.5 h-3.5" />}
+                    {data.status === 'completed' && <FaCheckCircle className="text-white w-3.5 h-3.5" />}
+                    {data.status === 'failed' && <FaTimesCircle className="text-white w-3.5 h-3.5" />}
+                    {data.status === 'stopped' && <FaStop className="text-white w-3.5 h-3.5" />}
+                    {data.status === 'standby' && <FaCircle className="text-white/80 w-3.5 h-3.5" />}
+                </div>
             </div>
             <div className="text-[10px] text-black mt-1 max-w-[80px] text-center font-medium">{data.fullName}</div>
             <div className="flex gap-1 mt-1">
@@ -475,7 +492,7 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
             <Handle
                 type="source"
                 position={Position.Right}
-                style={{ background: '#10b981', width: '8px', height: '8px', cursor: 'pointer' }}
+                style={{ background: '#334155', width: '8px', height: '8px', cursor: 'pointer' }}
                 id={`${id}-source`}
             />
         </div>
@@ -526,6 +543,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         return savedOutputs ? JSON.parse(savedOutputs) : {};
     });
     const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+    const cancelledNodesRef = useRef<Set<string>>(new Set());
+    const forceUpdate = useState({})[1];
 
     // Add validation state
     const [paramValidation, setParamValidation] = useState<RunParameterValidation>({
@@ -684,10 +703,10 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     // Update the getInputStyle function to use emerald text color
     const getInputStyle = (fieldName: string) => {
-        const baseStyle = "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm";
+        const baseStyle = "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors text-sm text-black placeholder-white focus:ring-black bg-white";
         return invalidFields.has(fieldName)
-            ? `${baseStyle} border-red-500 bg-red-50 focus:ring-red-200 text-red-500`
-            : `${baseStyle} border-gray-300 focus:ring-emerald-200 text-emerald-500 placeholder:text-emerald-300/50 placeholder:text-xs`;
+            ? `${baseStyle} border-red-500 bg-red-50 focus:ring-red-200`
+            : `${baseStyle} border-gray-300`;
     };
 
     // Parameter input fields JSX
@@ -695,7 +714,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         <div className="space-y-4">
             {Object.entries(runParams).map(([key, value]) => (
                 <div key={key} className="flex flex-col">
-                    <label className="text-sm font-bold text-white mb-1">
+                    <label className="text-sm font-bold text-black mb-1">
                         {key}
                         {invalidFields.has(key) && (
                             <span className="text-red-500 ml-1">*</span>
@@ -705,12 +724,12 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         <select
                             value={value || ''}
                             onChange={(e) => handleParamChange(key, e.target.value)}
-                            className={`${getInputStyle(key)} ${!value ? 'text-emerald-300/50 text-xs' : 'text-emerald-500'}`}
+                            className={`${getInputStyle(key)} text-black`}
                         >
-                            <option value="" className="text-emerald-300/50 text-xs">Select Environment</option>
-                            <option value="development" className="text-emerald-500">Development</option>
-                            <option value="staging" className="text-emerald-500">Staging</option>
-                            <option value="production" className="text-emerald-500">Production</option>
+                            <option value="" className="text-black text-xs">Select Environment</option>
+                            <option value="development" className="text-black">Development</option>
+                            <option value="staging" className="text-black">Staging</option>
+                            <option value="production" className="text-black">Production</option>
                         </select>
                     ) : (
                         <input
@@ -772,6 +791,10 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
         // Clear selected node in output panel
         setSelectedNode(null);
+
+        // Cancel all running/cancelled nodes
+        cancelledNodesRef.current = new Set();
+        forceUpdate({});
 
         console.log('🧹 Reset all nodes and cleared all data');
     }, [setNodes]);
@@ -919,6 +942,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         alreadyRun: Set<string> = new Set(),
         path: string[] = []
     ): Promise<any> {
+        // Cancel if node is in cancelledNodes
+        if (cancelledNodesRef.current.has(nodeId)) {
+            console.log(`Node ${nodeId} dependency run cancelled.`);
+            return;
+        }
         if (alreadyRun.has(nodeId) || nodeStatusMap[nodeId] === 'completed') return nodeOutputs[nodeId];
         if (path.includes(nodeId)) throw new Error(`Cycle detected: ${[...path, nodeId].join(' -> ')}`);
         const deps = dependencyMap[nodeId] || [];
@@ -928,6 +956,10 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             prevOutputs[dep] = depOutput;
         }
         // Now run the node, passing prevOutputs
+        if (cancelledNodesRef.current.has(nodeId)) {
+            console.log(`Node ${nodeId} run cancelled (post-deps).`);
+            return;
+        }
         const output = await runNodeFn(nodeId, prevOutputs);
         alreadyRun.add(nodeId);
         return output;
@@ -935,6 +967,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     // Helper: run a single node and wait for completion, now accepts previousOutputs
     const runNodeAndWait = async (nodeId: string, previousOutputs: any) => {
+        // Cancel if node is in cancelledNodes
+        if (cancelledNodesRef.current.has(nodeId)) {
+            console.log(`Node ${nodeId} run cancelled.`);
+            return;
+        }
         if (!areParamsApplied) {
             console.log('❌ Cannot run node: Parameters have not been applied');
             return;
@@ -994,19 +1031,31 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             await new Promise(res => setTimeout(res, 1000));
                         }
                     } catch (error) {
-                        updateNodeStatus(nodeId, 'failed');
+                        // Only set to failed if the node is not idle
+                        setNodes(nds => nds.map(node =>
+                            node.id === nodeId && node.data.status !== 'idle'
+                                ? { ...node, data: { ...node.data, status: 'failed' } }
+                                : node
+                        ));
                         finished = true;
                     }
                 }
             }
             return nodeOutput;
         } catch (error) {
-            updateNodeStatus(nodeId, 'failed');
+            // Only set to failed if the node is not idle
+            setNodes(nds => nds.map(node =>
+                node.id === nodeId && node.data.status !== 'idle'
+                    ? { ...node, data: { ...node.data, status: 'failed' } }
+                    : node
+            ));
         }
     };
 
     // Chain-dependency aware node runner (now uses refactored runNodeWithDependencies)
     const runNode = useCallback(async (nodeId: string) => {
+        cancelledNodesRef.current = new Set();
+        forceUpdate({});
         try {
             await runNodeWithDependencies(
                 nodeId,
@@ -1023,6 +1072,10 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     // Downstream reset logic
     const resetNodeAndDownstream = useCallback(async (nodeId: string) => {
         const toReset = Array.from(getAllDownstreamNodes(nodeId, downstreamMap));
+        toReset.push(nodeId); // include the node itself
+        // Add all to cancelledNodesRef
+        toReset.forEach(id => cancelledNodesRef.current.add(id));
+        forceUpdate({});
 
         // Reset nodes
         for (const id of toReset) {
@@ -1086,6 +1139,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     // Add the onStop handler
     const onStop = useCallback(async (nodeId: string) => {
+        cancelledNodesRef.current.add(nodeId);
+        forceUpdate({});
         const processId = processIds[nodeId];
         if (!processId) {
             console.warn(`No processId found for node ${nodeId}`);
@@ -1114,19 +1169,19 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     return (
         <HandlerContext.Provider value={{ runNode, resetNodeAndDownstream }}>
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            <div className="min-h-screen" style={{ backgroundColor: 'white' }}>
                 {/* Main Content */}
                 <div className="flex flex-col h-screen">
                     {/* Flow Container */}
                     <div className="flex-1 overflow-hidden">
-                        <div className="bg-slate-800/50 border-b border-slate-700/50 p-4">
+                        <div className="bg-[#F5F5F5] border-b border-slate-200 p-4">
                             <div className="flex justify-center">
-                                <h1 className="text-2xl font-semibold text-emerald-400">
+                                <h1 className="text-2xl font-semibold text-black">
                                     Generic Completeness Control
                                 </h1>
                             </div>
                         </div>
-                        <div className="h-[calc(100vh-180px)] bg-gradient-to-br from-gray-100 to-gray-200">
+                        <div className="h-[calc(100vh-180px)] bg-white">
                             <ReactFlow
                                 nodes={nodes}
                                 edges={edges}
@@ -1159,23 +1214,23 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
                     {/* Bottom Output Bar with Resize Handle */}
                     <div
-                        className="relative bg-slate-800/95 border-t border-slate-700/50"
+                        className="relative bg-[#F5F5F5] border-t border-slate-200"
                         style={{ height: `${bottomBarHeight}px`, minHeight: '120px', maxHeight: '50vh' }}
                     >
                         {/* Resize Handle */}
                         <div
                             className={`
                                 absolute -top-1 left-0 w-full h-2 cursor-row-resize z-10
-                                ${isResizingBottom ? 'bg-emerald-500' : 'bg-transparent hover:bg-emerald-500/30'}
-                    transition-colors
-                `}
+                                ${isResizingBottom ? 'bg-slate-700' : 'bg-transparent hover:bg-slate-700/30'}
+                                transition-colors
+                            `}
                             onMouseDown={(e) => {
                                 e.preventDefault();
                                 setIsResizingBottom(true);
                             }}
                         >
                             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <FaGripLines className="text-emerald-400/70" />
+                                <FaGripLines className="text-slate-700/70" />
                             </div>
                         </div>
 
@@ -1260,7 +1315,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 <div
                     ref={resizeRef}
                     className={`
-                        fixed right-0 top-0 h-full bg-slate-800/95 border-l border-slate-700/50
+                        fixed right-0 top-0 h-full bg-[#F5F5F5] border-l border-slate-200
                     transition-all duration-300 ease-in-out
                     ${!isSidebarOpen ? 'w-12' : ''}
                 `}
@@ -1274,7 +1329,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     <div
                         className={`
                             absolute left-0 top-0 h-full w-1 cursor-col-resize
-                            ${isResizing ? 'bg-emerald-500' : 'hover:bg-emerald-500/30'}
+                            ${isResizing ? 'bg-slate-700' : 'hover:bg-slate-700/30'}
                             transition-colors
                         `}
                         onMouseDown={(e) => {
@@ -1306,13 +1361,13 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     ${isSidebarOpen ? 'justify-between' : 'justify-center'}
                 `}>
                         {isSidebarOpen && (
-                            <span className="text-emerald-400 font-medium">
+                            <span className="text-black font-medium">
                                 Run Parameters
                             </span>
                         )}
                         <FaChevronLeft
                             className={`
-                                text-emerald-400/70 cursor-pointer transition-transform duration-300 hover:text-emerald-300
+                                text-slate-700/70 cursor-pointer transition-transform duration-300 hover:text-slate-600
                             ${isSidebarOpen ? '' : 'rotate-180'}
                         `}
                             onClick={(e) => {
@@ -1335,15 +1390,15 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 <div className="pt-6 flex gap-4">
                                     <button
                                         onClick={handleApplyParams}
-                                        className={`flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm 
-                                        font-medium transition-colors shadow-lg shadow-emerald-900/20 focus:ring-2 
-                                        focus:ring-emerald-500/50 active:transform active:scale-[0.98]`}
+                                        className={`flex-1 px-4 py-3 bg-green-800 hover:bg-green-700 text-white rounded-lg text-sm 
+                                        font-medium transition-colors shadow-lg shadow-green-900/20 focus:ring-2 
+                                        focus:ring-green-500/50 active:transform active:scale-[0.98]`}
                                     >
                                         Apply Parameters
                                     </button>
                                     {/* Validation Message */}
                                     {paramValidation.message && (
-                                        <p className={`mt-2 text-sm ${paramValidation.isValid ? 'text-emerald-400' : 'text-red-400'
+                                        <p className={`mt-2 text-sm ${paramValidation.isValid ? 'text-green-800' : 'text-red-400'
                                             }`}>
                                             {paramValidation.message}
                                         </p>
@@ -1379,7 +1434,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     {/* Collapsed state indicator */}
                     {!isSidebarOpen && (
                         <div
-                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-emerald-400/70 vertical-text"
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-black vertical-text"
                         >
                             <style jsx>{`
                             .vertical-text {
