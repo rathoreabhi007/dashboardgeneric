@@ -412,12 +412,55 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
                 style={{ background: '#334155', width: '8px', height: '8px', cursor: 'pointer' }}
                 id={`${id}-target`}
             />
-            <div className={getIconContainerStyle()}>
-                <img
-                    src="/nodeimage.jpg"
-                    alt="Node"
-                    className="absolute inset-[3px] w-[calc(100%-6px)] h-[calc(100%-6px)] rounded-full object-cover"
-                />
+            <div
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px solid black',      // Outermost thin black border
+                    borderRadius: '50%',
+                    width: 68,
+                    height: 68,
+                    background: 'transparent',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                }}
+            >
+                <div
+                    style={{
+                        border: '4px solid white',    // Middle thick white border
+                        borderRadius: '50%',
+                        width: 64,
+                        height: 64,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'transparent',
+                    }}
+                >
+                    <div
+                        style={{
+                            backgroundColor: 'rgb(78, 94, 103)', // Node color
+                            borderRadius: '50%',
+                            width: 60,
+                            height: 60,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                        }}
+                    >
+                        <img
+                            src="/nodecubic.png"
+                            alt="Node"
+                            style={{
+                                width: '96%',
+                                height: '96%',
+                                objectFit: 'contain',
+                                background: 'none',
+                            }}
+                        />
+                    </div>
+                </div>
             </div>
             {/* Status badge below the node */}
             <div className="flex justify-center w-full">
@@ -500,6 +543,11 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
 });
 
 export default function CompletenessControl({ instanceId }: { instanceId?: string }) {
+    // Define instance-specific localStorage keys
+    const paramKey = `validatedParams_${instanceId || 'default'}`;
+    const nodeOutputsKey = `nodeOutputs_${instanceId || 'default'}`;
+    const nodesKey = `nodes_${instanceId || 'default'}`;
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [sidebarWidth, setSidebarWidth] = useState(320);
     const [isResizing, setIsResizing] = useState(false);
@@ -507,7 +555,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const [isResizingBottom, setIsResizingBottom] = useState(false);
     const [selectedNode, setSelectedNode] = useState<any>(null);
     const [areParamsApplied, setAreParamsApplied] = useState(() => {
-        const saved = localStorage.getItem('validatedParams');
+        const saved = localStorage.getItem(paramKey);
         if (!saved) return false;
         try {
             const params = JSON.parse(saved);
@@ -522,7 +570,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const minHeight = 32;
     const nodeTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
     const [runParams, setRunParams] = useState<LocalRunParameters>(() => {
-        const saved = localStorage.getItem('validatedParams');
+        const saved = localStorage.getItem(paramKey);
         return saved
             ? JSON.parse(saved)
             : {
@@ -539,7 +587,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
     const [validatedParams, setValidatedParams] = useState<LocalRunParameters | null>(null);
     const [nodeOutputs, setNodeOutputs] = useState<{ [nodeId: string]: any }>(() => {
-        const savedOutputs = localStorage.getItem('nodeOutputs');
+        const savedOutputs = localStorage.getItem(nodeOutputsKey);
         return savedOutputs ? JSON.parse(savedOutputs) : {};
     });
     const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
@@ -554,7 +602,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     // Restore nodes from localStorage if available, otherwise use initialNodes
     const restoredNodes = (() => {
-        const saved = localStorage.getItem('nodes');
+        const saved = localStorage.getItem(nodesKey);
         if (saved) {
             try {
                 return JSON.parse(saved);
@@ -679,16 +727,16 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
         if (!hasErrors) {
             console.log('✅ All parameters are valid:', runParams);
-            localStorage.setItem('validatedParams', JSON.stringify(runParams));
+            localStorage.setItem(paramKey, JSON.stringify(runParams));
             setValidatedParams(runParams);
             setAreParamsApplied(true);
         } else {
-            localStorage.removeItem('validatedParams');
+            localStorage.removeItem(paramKey);
             setAreParamsApplied(false);
         }
 
         return !hasErrors;
-    }, [runParams]);
+    }, [runParams, paramKey]);
 
     const handleApplyParams = useCallback(() => {
         const isValid = validateParameters();
@@ -760,7 +808,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     // Function to reset all nodes
     const resetAllNodes = useCallback(() => {
         // Clear all node outputs from localStorage
-        localStorage.removeItem('nodeOutputs');
+        localStorage.removeItem(nodeOutputsKey);
         setNodeOutputs({});
 
         // Reset all process IDs
@@ -797,7 +845,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         forceUpdate({});
 
         console.log('🧹 Reset all nodes and cleared all data');
-    }, [setNodes]);
+    }, [setNodes, nodeOutputsKey]);
 
     // Function to run nodes in sequence
     const runAllNodes = async () => {
@@ -807,7 +855,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         }
 
         // Get parameters from localStorage
-        const storedParams = localStorage.getItem('validatedParams');
+        const storedParams = localStorage.getItem(paramKey);
         if (!storedParams) {
             console.log('❌ Cannot run all nodes: No validated parameters found');
             setAreParamsApplied(false);
@@ -892,15 +940,15 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     // Update localStorage whenever nodeOutputs changes
     useEffect(() => {
-        localStorage.setItem('nodeOutputs', JSON.stringify(nodeOutputs));
+        localStorage.setItem(nodeOutputsKey, JSON.stringify(nodeOutputs));
         console.log('💾 Saved node outputs to localStorage:', nodeOutputs);
-    }, [nodeOutputs]);
+    }, [nodeOutputs, nodeOutputsKey]);
 
     const resetAllNodeOutputs = useCallback(() => {
         setNodeOutputs({});
-        localStorage.removeItem('nodeOutputs');
+        localStorage.removeItem(nodeOutputsKey);
         console.log('🧹 Cleared all node outputs');
-    }, []);
+    }, [nodeOutputsKey]);
 
     // Update the onSelectionChange handler
     const onSelectionChange = useCallback(({ nodes: selectedNodesArr }: { nodes: Node[] }) => {
@@ -976,7 +1024,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             console.log('❌ Cannot run node: Parameters have not been applied');
             return;
         }
-        const storedParams = localStorage.getItem('validatedParams');
+        const storedParams = localStorage.getItem(paramKey);
         if (!storedParams) {
             console.log('❌ Cannot run node: No validated parameters found');
             setAreParamsApplied(false);
@@ -990,7 +1038,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             if (hasEmptyFields) {
                 console.log('❌ Cannot run node: Invalid parameters detected');
                 setAreParamsApplied(false);
-                localStorage.removeItem('validatedParams');
+                localStorage.removeItem(paramKey);
                 return;
             }
             // Proceed with node execution
@@ -1021,7 +1069,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             if (status.status === 'completed' && status.output) {
                                 setNodeOutputs(prev => {
                                     const updated = { ...prev, [nodeId]: status.output };
-                                    localStorage.setItem('nodeOutputs', JSON.stringify(updated));
+                                    localStorage.setItem(nodeOutputsKey, JSON.stringify(updated));
                                     return updated;
                                 });
                                 nodeOutput = status.output;
@@ -1090,7 +1138,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             setNodeOutputs(prev => {
                 const updated = { ...prev };
                 delete updated[id];
-                localStorage.setItem('nodeOutputs', JSON.stringify(updated));
+                localStorage.setItem(nodeOutputsKey, JSON.stringify(updated));
                 return updated;
             });
         }
@@ -1108,7 +1156,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             }
             return edge;
         }));
-    }, [downstreamMap, processIds, updateNodeStatus, setNodeOutputs, setEdges]);
+    }, [downstreamMap, processIds, updateNodeStatus, setNodeOutputs, setEdges, nodeOutputsKey]);
 
     // Update nodes when areParamsApplied changes
     useEffect(() => {
@@ -1134,8 +1182,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     // Persist nodes to localStorage whenever they change
     useEffect(() => {
-        localStorage.setItem('nodes', JSON.stringify(nodes));
-    }, [nodes]);
+        localStorage.setItem(nodesKey, JSON.stringify(nodes));
+    }, [nodes, nodesKey]);
 
     // Add the onStop handler
     const onStop = useCallback(async (nodeId: string) => {
