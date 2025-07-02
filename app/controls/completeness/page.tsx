@@ -807,7 +807,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     ...edge,
                     style: {
                         ...edge.style,
-                        stroke: status === 'completed' ? '#10b981' : '#1e293b'
+                        stroke: status === 'completed' ? '#22c55e' : '#1e293b'
                     }
                 };
             }
@@ -1510,13 +1510,13 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                     <div className="flex flex-col h-full">
                                                         <div className="mb-2">
                                                             <div className="flex items-center gap-2 mb-2">
-                                                                <span className="font-semibold text-emerald-400 text-sm">Data Columns ({selectedNode.data.output.calculation_results.headers.length} total)</span>
+                                                                <span className="font-semibold text-black text-sm">Data Columns ({selectedNode.data.output.calculation_results.headers.length} total)</span>
                                                             </div>
                                                             <div className="flex items-center gap-2 flex-wrap">
                                                                 <select
                                                                     value={histogramFilterType}
                                                                     onChange={e => setHistogramFilterType(e.target.value)}
-                                                                    className="px-2 py-1 rounded bg-slate-800 text-slate-200 text-xs border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                                                                    className="px-3 py-1 rounded bg-white text-black text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                 >
                                                                     <option value="contains">Contains</option>
                                                                     <option value="equals">Equals</option>
@@ -1528,7 +1528,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                                     placeholder="Filter value..."
                                                                     value={histogramFilterValue}
                                                                     onChange={e => setHistogramFilterValue(e.target.value)}
-                                                                    className="px-2 py-1 rounded bg-slate-800 text-slate-200 text-xs border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 flex-1"
+                                                                    className="px-3 py-1 rounded bg-white text-black text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1"
                                                                     style={{ minWidth: 120 }}
                                                                 />
                                                                 <button
@@ -1536,22 +1536,20 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                                         setHistogramFilterValue('');
                                                                         setHistogramFilterType('contains');
                                                                     }}
-                                                                    className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs border border-slate-600"
+                                                                    className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-black text-sm border border-gray-300 transition-colors"
                                                                 >
                                                                     Reset
                                                                 </button>
                                                             </div>
                                                         </div>
                                                         <div
-                                                            className="border border-slate-700 rounded bg-slate-900/50"
+                                                            className="ag-theme-alpine border border-gray-300 rounded bg-white"
                                                             style={{
                                                                 height: '350px',
-                                                                overflow: 'auto',
-                                                                scrollbarWidth: 'thin',
-                                                                scrollbarColor: '#64748b #1e293b'
+                                                                overflow: 'auto'
                                                             }}
                                                         >
-                                                            <div className="p-2">
+                                                            <div className="p-3">
                                                                 {(() => {
                                                                     const filteredHeaders = selectedNode.data.output.calculation_results.headers.filter((header: string) => {
                                                                         if (!histogramFilterValue) return true;
@@ -1575,17 +1573,17 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                                     return filteredHeaders.length > 0 ? (
                                                                         <ul className="space-y-1">
                                                                             {filteredHeaders.map((header: string, idx: number) => (
-                                                                                <li key={idx} className="bg-slate-800 text-emerald-300 rounded px-3 py-2 text-xs hover:bg-slate-700 transition-colors" title={header}>
-                                                                                    <span className="text-slate-400 mr-2">#{idx + 1}</span>
-                                                                                    {header}
+                                                                                <li key={idx} className="inline-block bg-white border border-gray-200 text-black rounded px-3 py-2 text-sm hover:bg-gray-50 transition-colors shadow-sm" title={header}>
+                                                                                    <span className="text-gray-600 mr-2 font-medium">#{idx + 1}</span>
+                                                                                    <span className="font-normal">{header}</span>
                                                                                 </li>
                                                                             ))}
-                                                                            <div className="mt-2 text-slate-400 text-xs">
+                                                                            <div className="mt-3 text-black text-sm border-t border-gray-200 pt-2">
                                                                                 Showing {filteredHeaders.length} of {selectedNode.data.output.calculation_results.headers.length} columns
                                                                             </div>
                                                                         </ul>
                                                                     ) : (
-                                                                        <div className="text-slate-400 text-xs">No columns found matching the filter criteria.</div>
+                                                                        <div className="text-black text-sm">No columns found matching the filter criteria.</div>
                                                                     );
                                                                 })()}
                                                             </div>
