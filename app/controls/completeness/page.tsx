@@ -16,10 +16,11 @@ import ReactFlow, {
     Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { FaCheckCircle, FaTimesCircle, FaSpinner, FaCircle, FaPlay, FaStop, FaUndo, FaChevronLeft, FaFolder, FaGripLines } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaSpinner, FaCircle, FaPlay, FaStop, FaUndo, FaChevronLeft, FaFolder, FaGripLines, FaChartBar, FaTable, FaFileAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { ApiService } from '@/app/services/api';
 import { buildDependencyMap, buildDownstreamMap, runNodeWithDependencies, getAllDownstreamNodes } from '@/app/utils/graph-utils';
 import { HandlerContext, HandlerContextType } from '@/app/controls/completeness/HandlerContext';
+import AgGridTable from '@/app/utils/AgGridTable';
 
 // Node status types
 type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'standby' | 'stopped';
@@ -343,11 +344,12 @@ type LocalRunParameters = {
 };
 
 // Define the CustomNode component outside the main component
-const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
+const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTab }: {
     data: any;
     id: string;
     nodeOutputs: { [key: string]: any };
     setSelectedNode: (node: any) => void;
+    setSelectedTab: (tab: string) => void;
 }) => {
     const { runNode, resetNodeAndDownstream } = useContext(HandlerContext) as HandlerContextType;
     const [isHovered, setIsHovered] = useState(false);
@@ -356,11 +358,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
     const canReset = data.status === 'failed' || data.status === 'completed' || data.status === 'stopped';
     const isSelected = data.selected || false;
     const canRun = data.areParamsApplied && !isRunning;
+    const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        // When a node is clicked, set it as selected with its output
-        const output = nodeOutputs[id];
+        // When a node is clicked, set it as selected with its output (default to empty object if missing)
+        const output = (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {};
         setSelectedNode({
             id,
             data: {
@@ -532,6 +535,89 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode }: {
                     Reset
                 </button>
             </div>
+            {/* New row of tab buttons with icons and tooltips */}
+            <div className="flex gap-1 mt-1 justify-center" style={{ width: 120 }}>
+                <div className="relative group">
+                    <button
+                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-emerald-300"
+                        style={{ width: 26, height: 26 }}
+                        onClick={e => {
+                            e.stopPropagation();
+                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
+                            setSelectedTab('histogram');
+                        }}
+                        onMouseEnter={() => setHoveredTab('histogram')}
+                        onMouseLeave={() => setHoveredTab(null)}
+                    >
+                        <FaChartBar size={14} />
+                    </button>
+                    {hoveredTab === 'histogram' && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
+                            Histogram
+                        </div>
+                    )}
+                </div>
+                <div className="relative group">
+                    <button
+                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-emerald-300"
+                        style={{ width: 26, height: 26 }}
+                        onClick={e => {
+                            e.stopPropagation();
+                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
+                            setSelectedTab('data');
+                        }}
+                        onMouseEnter={() => setHoveredTab('data')}
+                        onMouseLeave={() => setHoveredTab(null)}
+                    >
+                        <FaTable size={14} />
+                    </button>
+                    {hoveredTab === 'data' && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
+                            Data Output
+                        </div>
+                    )}
+                </div>
+                <div className="relative group">
+                    <button
+                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-emerald-300"
+                        style={{ width: 26, height: 26 }}
+                        onClick={e => {
+                            e.stopPropagation();
+                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
+                            setSelectedTab('log');
+                        }}
+                        onMouseEnter={() => setHoveredTab('log')}
+                        onMouseLeave={() => setHoveredTab(null)}
+                    >
+                        <FaFileAlt size={14} />
+                    </button>
+                    {hoveredTab === 'log' && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
+                            Log
+                        </div>
+                    )}
+                </div>
+                <div className="relative group">
+                    <button
+                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-emerald-300"
+                        style={{ width: 26, height: 26 }}
+                        onClick={e => {
+                            e.stopPropagation();
+                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
+                            setSelectedTab('fail');
+                        }}
+                        onMouseEnter={() => setHoveredTab('fail')}
+                        onMouseLeave={() => setHoveredTab(null)}
+                    >
+                        <FaExclamationTriangle size={14} />
+                    </button>
+                    {hoveredTab === 'fail' && (
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
+                            Fail Message
+                        </div>
+                    )}
+                </div>
+            </div>
             <Handle
                 type="source"
                 position={Position.Right}
@@ -599,6 +685,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         isValid: false,
         message: 'Please fill all required parameters'
     });
+
+    // Add this at the top level of CompletenessControl, with other useState hooks
+    const [histogramSearch, setHistogramSearch] = useState('');
+    const [histogramFilterType, setHistogramFilterType] = useState('contains');
+    const [histogramFilterValue, setHistogramFilterValue] = useState('');
 
     // Restore nodes from localStorage if available, otherwise use initialNodes
     const restoredNodes = (() => {
@@ -1170,15 +1261,17 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     }, [areParamsApplied, setNodes]);
 
     // Define nodeTypes with the required props
+    const [selectedTab, setSelectedTab] = useState<string>('data');
     const nodeTypes = useMemo(() => ({
         custom: (props: any) => (
             <CustomNode
                 {...props}
                 nodeOutputs={nodeOutputs}
                 setSelectedNode={setSelectedNode}
+                setSelectedTab={setSelectedTab}
             />
         )
-    }), [nodeOutputs, setSelectedNode]);
+    }), [nodeOutputs, setSelectedNode, setSelectedTab]);
 
     // Persist nodes to localStorage whenever they change
     useEffect(() => {
@@ -1242,7 +1335,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 minZoom={0.5}
                                 maxZoom={2}
                                 nodesDraggable={false}
-                                panOnDrag={false}
+                                panOnDrag={true}
                                 zoomOnScroll={false}
                                 preventScrolling={true}
                                 className="bg-transparent"
@@ -1286,66 +1379,162 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         <div className="h-full px-4 overflow-y-auto">
                             {selectedNode ? (
                                 <div className="flex-1 text-sm text-slate-300 h-full overflow-hidden">
-                                    <div className="flex items-center justify-between h-8 border-b border-slate-700/50">
-                                        <span className="text-emerald-400 font-medium">{selectedNode.data?.fullName || selectedNode.fullName} Output</span>
-                                        <button
-                                            onClick={() => setSelectedNode(null)}
-                                            className="text-slate-400 hover:text-slate-300 text-xs"
-                                        >
-                                            Close
-                                        </button>
+                                    {/* Tab Buttons */}
+                                    <div className="flex gap-2 border-b border-slate-700/50 mb-2">
+                                        <button onClick={() => setSelectedTab('histogram')} className={`px-2 py-1 rounded-t ${selectedTab === 'histogram' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Histogram</button>
+                                        <button onClick={() => setSelectedTab('data')} className={`px-2 py-1 rounded-t ${selectedTab === 'data' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Data Output</button>
+                                        <button onClick={() => setSelectedTab('log')} className={`px-2 py-1 rounded-t ${selectedTab === 'log' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Log</button>
+                                        <button onClick={() => setSelectedTab('fail')} className={`px-2 py-1 rounded-t ${selectedTab === 'fail' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Fail Message</button>
                                     </div>
-                                    <div className="mt-4 space-y-4">
-                                        {/* Status */}
-                                        <div>
-                                            <span className="text-emerald-400 font-medium">Status: </span>
-                                            <span className={`px-2 py-1 rounded-full text-xs ${selectedNode.data.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                selectedNode.data.status === 'failed' ? 'bg-red-500/20 text-red-400' :
-                                                    selectedNode.data.status === 'running' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                        'bg-slate-500/20 text-slate-400'
-                                                }`}>
-                                                {selectedNode.data.status}
-                                            </span>
-                                        </div>
-
-                                        {/* Run Parameters */}
-                                        {selectedNode.data.output?.run_parameters && (
+                                    {/* Tab Content */}
+                                    <div className="mt-2">
+                                        {selectedTab === 'histogram' && (
                                             <div>
-                                                <h3 className="text-emerald-400 font-medium mb-2">Run Parameters:</h3>
-                                                <div className="bg-slate-900/50 rounded p-2 space-y-1">
-                                                    {Object.entries(selectedNode.data.output.run_parameters).map(([key, value]) => (
-                                                        <div key={key} className="grid grid-cols-2 gap-2">
-                                                            <span className="text-slate-400">{key}:</span>
-                                                            <span className="text-slate-300">{value as string}</span>
+                                                {/* Show all column names (headers) in a vertical scrollable list with search */}
+                                                {selectedNode.data.output?.calculation_results?.headers ? (
+                                                    <div className="flex flex-col h-full">
+                                                        <div className="mb-2">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <span className="font-semibold text-emerald-400 text-sm">Data Columns ({selectedNode.data.output.calculation_results.headers.length} total)</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <select
+                                                                    value={histogramFilterType}
+                                                                    onChange={e => setHistogramFilterType(e.target.value)}
+                                                                    className="px-2 py-1 rounded bg-slate-800 text-slate-200 text-xs border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                                                                >
+                                                                    <option value="contains">Contains</option>
+                                                                    <option value="equals">Equals</option>
+                                                                    <option value="startsWith">Starts With</option>
+                                                                    <option value="endsWith">Ends With</option>
+                                                                </select>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Filter value..."
+                                                                    value={histogramFilterValue}
+                                                                    onChange={e => setHistogramFilterValue(e.target.value)}
+                                                                    className="px-2 py-1 rounded bg-slate-800 text-slate-200 text-xs border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 flex-1"
+                                                                    style={{ minWidth: 120 }}
+                                                                />
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setHistogramFilterValue('');
+                                                                        setHistogramFilterType('contains');
+                                                                    }}
+                                                                    className="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs border border-slate-600"
+                                                                >
+                                                                    Reset
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                    ))}
-                                                </div>
+                                                        <div
+                                                            className="border border-slate-700 rounded bg-slate-900/50"
+                                                            style={{
+                                                                height: '350px',
+                                                                overflow: 'auto',
+                                                                scrollbarWidth: 'thin',
+                                                                scrollbarColor: '#64748b #1e293b'
+                                                            }}
+                                                        >
+                                                            <div className="p-2">
+                                                                {(() => {
+                                                                    const filteredHeaders = selectedNode.data.output.calculation_results.headers.filter((header: string) => {
+                                                                        if (!histogramFilterValue) return true;
+
+                                                                        const headerLower = header.toLowerCase();
+                                                                        const filterValueLower = histogramFilterValue.toLowerCase();
+
+                                                                        switch (histogramFilterType) {
+                                                                            case 'equals':
+                                                                                return headerLower === filterValueLower;
+                                                                            case 'startsWith':
+                                                                                return headerLower.startsWith(filterValueLower);
+                                                                            case 'endsWith':
+                                                                                return headerLower.endsWith(filterValueLower);
+                                                                            case 'contains':
+                                                                            default:
+                                                                                return headerLower.includes(filterValueLower);
+                                                                        }
+                                                                    });
+
+                                                                    return filteredHeaders.length > 0 ? (
+                                                                        <ul className="space-y-1">
+                                                                            {filteredHeaders.map((header: string, idx: number) => (
+                                                                                <li key={idx} className="bg-slate-800 text-emerald-300 rounded px-3 py-2 text-xs hover:bg-slate-700 transition-colors" title={header}>
+                                                                                    <span className="text-slate-400 mr-2">#{idx + 1}</span>
+                                                                                    {header}
+                                                                                </li>
+                                                                            ))}
+                                                                            <div className="mt-2 text-slate-400 text-xs">
+                                                                                Showing {filteredHeaders.length} of {selectedNode.data.output.calculation_results.headers.length} columns
+                                                                            </div>
+                                                                        </ul>
+                                                                    ) : (
+                                                                        <div className="text-slate-400 text-xs">No columns found matching the filter criteria.</div>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div>No columns found.</div>
+                                                )}
                                             </div>
                                         )}
-
-                                        {/* Execution Logs */}
-                                        {selectedNode.data.output?.execution_logs && (
+                                        {selectedTab === 'data' && (
                                             <div>
-                                                <h3 className="text-emerald-400 font-medium mb-2">Execution Logs:</h3>
-                                                <div className="bg-slate-900/50 rounded p-2 space-y-1">
-                                                    {selectedNode.data.output.execution_logs.map((log: string, index: number) => (
-                                                        <div key={index} className="text-slate-300">
-                                                            {log}
+                                                {/* Calculation Results as AG Grid */}
+                                                {selectedNode.data.output?.calculation_results?.headers && selectedNode.data.output?.calculation_results?.table ? (
+                                                    <AgGridTable
+                                                        columns={selectedNode.data.output.calculation_results.headers.map((header: string) => ({ headerName: header, field: header }))}
+                                                        rowData={selectedNode.data.output.calculation_results.table.map((row: any[]) => {
+                                                            const obj: any = {};
+                                                            selectedNode.data.output.calculation_results.headers.forEach((header: string, idx: number) => {
+                                                                obj[header] = row[idx];
+                                                            });
+                                                            return obj;
+                                                        })}
+                                                        height={350}
+                                                    />
+                                                ) : selectedNode.data.output?.calculation_results ? (
+                                                    <div>
+                                                        <h3 className="text-emerald-400 font-medium mb-2">Calculation Results:</h3>
+                                                        <div className="bg-slate-900/50 rounded p-2">
+                                                            <pre className="text-slate-300 whitespace-pre-wrap">
+                                                                {JSON.stringify(selectedNode.data.output.calculation_results, null, 2)}
+                                                            </pre>
                                                         </div>
-                                                    ))}
-                                                </div>
+                                                    </div>
+                                                ) : 'No data output.'}
                                             </div>
                                         )}
-
-                                        {/* Calculation Results */}
-                                        {selectedNode.data.output?.calculation_results && (
+                                        {selectedTab === 'log' && (
                                             <div>
-                                                <h3 className="text-emerald-400 font-medium mb-2">Calculation Results:</h3>
-                                                <div className="bg-slate-900/50 rounded p-2">
-                                                    <pre className="text-slate-300 whitespace-pre-wrap">
-                                                        {JSON.stringify(selectedNode.data.output.calculation_results, null, 2)}
-                                                    </pre>
-                                                </div>
+                                                {/* Execution Logs */}
+                                                {selectedNode.data.output?.execution_logs ? (
+                                                    <div>
+                                                        <h3 className="text-emerald-400 font-medium mb-2">Execution Logs:</h3>
+                                                        <div className="bg-slate-900/50 rounded p-2 space-y-1">
+                                                            {selectedNode.data.output.execution_logs.map((log: string, index: number) => (
+                                                                <div key={index} className="text-slate-300">
+                                                                    {log}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : 'No logs.'}
+                                            </div>
+                                        )}
+                                        {selectedTab === 'fail' && (
+                                            <div>
+                                                {/* Fail Message only if node failed */}
+                                                {selectedNode.data.status === 'failed' && selectedNode.data.output?.fail_message ? (
+                                                    <div className="bg-red-900/50 rounded p-2 text-red-300">
+                                                        {selectedNode.data.output.fail_message}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-slate-400">No fail message (node did not fail)</div>
+                                                )}
                                             </div>
                                         )}
                                     </div>

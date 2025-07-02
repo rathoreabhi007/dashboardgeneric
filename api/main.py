@@ -202,36 +202,8 @@ async def process_node_async(process_id: str, node_id: str, params: RunParameter
         processes[process_id].error = str(e)
 
 def process_node(node_id: str, params: RunParameters, previous_outputs: Optional[Dict[str, Any]] = None) -> Dict:
-    if node_id == "reading_config_comp":
-        return process_config_comp_node(params)
-    elif node_id == "file_searching_src":
-        return process_file_search_node(params, previous_outputs, "src")
-    elif node_id == "file_searching_tgt":
-        return process_file_search_node(params, previous_outputs, "tgt")
-    elif node_id == "pre_harmonisation_src":
-        return process_pre_harmonisation_node(params, previous_outputs, "src")
-    elif node_id == "pre_harmonisation_tgt":
-        return process_pre_harmonisation_node(params, previous_outputs, "tgt")
-    elif node_id == "enrichment_file_search_src":
-        return process_enrichment_file_search_node(params, previous_outputs, "src")
-    elif node_id == "enrichment_file_search_tgt":
-        return process_enrichment_file_search_node(params, previous_outputs, "tgt")
-    elif "harmonisation" in node_id:
-        return process_harmonisation_node(params, previous_outputs)
-    elif "enrichment" in node_id:
-        return process_enrichment_node(params, previous_outputs)
-    elif "transform" in node_id:
-        return process_transform_node(params, previous_outputs)
-    elif node_id == "combine_data":
-        return process_combine_node(params, previous_outputs)
-    elif node_id == "apply_rules":
-        return process_rules_node(params, previous_outputs)
-    elif node_id == "output_rules":
-        return process_output_node(params, previous_outputs)
-    elif node_id == "break_rolling":
-        return process_break_node(params, previous_outputs)
-    else:
-        return process_generic_node(params)
+    # Always return a large random table for all nodes
+    return process_generic_node(params)
 
 def process_config_comp_node(params: RunParameters) -> Dict:
     """Process the combined config node that handles both SRC and TGT configurations."""
@@ -450,15 +422,26 @@ def process_break_node(params: RunParameters, previous_outputs: Optional[Dict[st
     }
 
 def process_generic_node(params: RunParameters) -> Dict:
+    # Generate random table data: 100 columns, 1000 rows
+    num_cols = 100
+    num_rows = 1000
+    headers = [f"col_{i+1}" for i in range(num_cols)]
+    table = []
+    for _ in range(num_rows):
+        row = [random.randint(1, 10000) for _ in range(num_cols)]
+        table.append(row)
     return {
         "status": "success",
         "run_parameters": params.dict(),
         "execution_logs": [
             f"Starting general processing at {datetime.now().isoformat()}",
             f"Processing with environment: {params.runEnv}",
-            "Processing completed"
+            "Processing completed",
+            f"Generated random table with {num_cols} columns and {num_rows} rows"
         ],
         "calculation_results": {
+            "headers": headers,
+            "table": table,
             "processed_at": datetime.now().isoformat(),
             "environment": params.runEnv
         }
