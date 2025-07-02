@@ -628,6 +628,44 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
     );
 });
 
+// Utility function to safely manage localStorage quota
+const safeLocalStorageSet = (key: string, value: string) => {
+    try {
+        localStorage.setItem(key, value);
+        return true;
+    } catch (error) {
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+            console.warn('localStorage quota exceeded, attempting to free space...');
+            // Clear old node outputs to free space
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.includes('nodeOutputs_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => {
+                try {
+                    localStorage.removeItem(key);
+                } catch (e) {
+                    console.warn('Failed to remove key:', key);
+                }
+            });
+
+            // Try again after cleanup
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (retryError) {
+                console.warn('Still failed to save to localStorage after cleanup');
+                return false;
+            }
+        }
+        console.warn('Failed to save to localStorage:', error);
+        return false;
+    }
+};
+
 export default function CompletenessControl({ instanceId }: { instanceId?: string }) {
     // Define instance-specific localStorage keys
     const paramKey = `validatedParams_${instanceId || 'default'}`;
@@ -674,7 +712,23 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const [validatedParams, setValidatedParams] = useState<LocalRunParameters | null>(null);
     const [nodeOutputs, setNodeOutputs] = useState<{ [nodeId: string]: any }>(() => {
         const savedOutputs = localStorage.getItem(nodeOutputsKey);
-        return savedOutputs ? JSON.parse(savedOutputs) : {};
+        if (savedOutputs) {
+            try {
+                const parsed = JSON.parse(savedOutputs);
+                console.log('🔄 Restored node outputs from localStorage:', Object.keys(parsed));
+                // Log table sizes for verification
+                Object.entries(parsed).forEach(([nodeId, output]: [string, any]) => {
+                    if (output?.calculation_results?.table_size) {
+                        console.log(`   - ${nodeId}: ${output.calculation_results.table_size}`);
+                    }
+                });
+                return parsed;
+            } catch (error) {
+                console.warn('Failed to parse saved node outputs:', error);
+                return {};
+            }
+        }
+        return {};
     });
     const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
     const cancelledNodesRef = useRef<Set<string>>(new Set());
@@ -818,11 +872,18 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
         if (!hasErrors) {
             console.log('✅ All parameters are valid:', runParams);
-            localStorage.setItem(paramKey, JSON.stringify(runParams));
+            const success = safeLocalStorageSet(paramKey, JSON.stringify(runParams));
+            if (!success) {
+                console.warn('Failed to save parameters to localStorage');
+            }
             setValidatedParams(runParams);
             setAreParamsApplied(true);
         } else {
-            localStorage.removeItem(paramKey);
+            try {
+                localStorage.removeItem(paramKey);
+            } catch (error) {
+                console.warn('Failed to remove parameters from localStorage:', error);
+            }
             setAreParamsApplied(false);
         }
 
@@ -1031,8 +1092,59 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     // Update localStorage whenever nodeOutputs changes
     useEffect(() => {
-        localStorage.setItem(nodeOutputsKey, JSON.stringify(nodeOutputs));
-        console.log('💾 Saved node outputs to localStorage:', nodeOutputs);
+        try {
+            // Store complete data including 100x1000 tables (smaller than 200x1000)
+            const compressedOutputs: { [nodeId: string]: any } = {};
+
+            Object.keys(nodeOutputs).forEach(nodeId => {
+                const output = nodeOutputs[nodeId];
+                if (output) {
+                    compressedOutputs[nodeId] = {
+                        ...output,
+                        calculation_results: output.calculation_results ? {
+                            headers: output.calculation_results.headers,
+                            // Store complete table data (100x1000 is manageable in localStorage)
+                            table: output.calculation_results.table || [],
+                            // Add metadata to track data completeness
+                            table_size: output.calculation_results.table ?
+                                `${output.calculation_results.headers?.length || 0}x${output.calculation_results.table.length || 0}` : '0x0'
+                        } : output.calculation_results
+                    };
+                }
+            });
+
+            const success = safeLocalStorageSet(nodeOutputsKey, JSON.stringify(compressedOutputs));
+            if (success) {
+                console.log('💾 Saved complete node outputs to localStorage (100x1000 tables included)');
+            }
+        } catch (error) {
+            console.warn('Failed to save complete node outputs, trying lightweight version:', error);
+            // Fallback: try saving without table data
+            try {
+                const lightweightOutputs: { [nodeId: string]: any } = {};
+                Object.keys(nodeOutputs).forEach(nodeId => {
+                    const output = nodeOutputs[nodeId];
+                    if (output) {
+                        lightweightOutputs[nodeId] = {
+                            ...output,
+                            calculation_results: output.calculation_results ? {
+                                headers: output.calculation_results.headers,
+                                table: [], // Fallback: empty table
+                                table_size: output.calculation_results.table ?
+                                    `${output.calculation_results.headers?.length || 0}x${output.calculation_results.table.length || 0}` : '0x0'
+                            } : output.calculation_results
+                        };
+                    }
+                });
+
+                const fallbackSuccess = safeLocalStorageSet(nodeOutputsKey, JSON.stringify(lightweightOutputs));
+                if (fallbackSuccess) {
+                    console.log('💾 Saved lightweight node outputs to localStorage (fallback mode)');
+                }
+            } catch (fallbackError) {
+                console.warn('Failed to save even lightweight data:', fallbackError);
+            }
+        }
     }, [nodeOutputs, nodeOutputsKey]);
 
     const resetAllNodeOutputs = useCallback(() => {
@@ -1160,7 +1272,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             if (status.status === 'completed' && status.output) {
                                 setNodeOutputs(prev => {
                                     const updated = { ...prev, [nodeId]: status.output };
-                                    localStorage.setItem(nodeOutputsKey, JSON.stringify(updated));
+                                    // localStorage is now handled by useEffect with lightweight data
                                     return updated;
                                 });
                                 nodeOutput = status.output;
@@ -1229,7 +1341,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             setNodeOutputs(prev => {
                 const updated = { ...prev };
                 delete updated[id];
-                localStorage.setItem(nodeOutputsKey, JSON.stringify(updated));
+                // localStorage is now handled by useEffect with lightweight data
                 return updated;
             });
         }
@@ -1275,8 +1387,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
     // Persist nodes to localStorage whenever they change
     useEffect(() => {
-        localStorage.setItem(nodesKey, JSON.stringify(nodes));
-    }, [nodes, nodesKey]);
+        const success = safeLocalStorageSet(nodesKey, JSON.stringify(nodes));
+        if (!success) {
+            console.warn('Failed to save nodes to localStorage');
+        }
+    }, [nodes, nodesKey, nodeOutputsKey]);
 
     // Add the onStop handler
     const onStop = useCallback(async (nodeId: string) => {
