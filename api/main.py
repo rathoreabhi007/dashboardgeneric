@@ -11,6 +11,7 @@ import logging
 import random
 from datetime import datetime
 from enum import Enum
+import string
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -426,9 +427,27 @@ def process_generic_node(params: RunParameters) -> Dict:
     num_cols = 100
     num_rows = 1000
     headers = [f"col_{i+1}" for i in range(num_cols)]
+
+    # Randomly choose 30% of columns to be text columns
+    text_col_indices = set(random.sample(range(num_cols), k=int(num_cols * 0.3)))
+    # Of the text columns, 20% of their cells will be long text (150 chars)
+    long_text_col_indices = set(random.sample(list(text_col_indices), k=max(1, int(len(text_col_indices) * 0.3))))
+
+    def random_text(length):
+        return ''.join(random.choices(string.ascii_letters + string.digits + ' ', k=length))
+
     table = []
     for _ in range(num_rows):
-        row = [random.randint(1, 10000) for _ in range(num_cols)]
+        row = []
+        for col in range(num_cols):
+            if col in text_col_indices:
+                # 20% chance for long text in long_text_col_indices
+                if col in long_text_col_indices and random.random() < 0.2:
+                    row.append(random_text(150))
+                else:
+                    row.append(random_text(random.randint(5, 20)))
+            else:
+                row.append(random.randint(1, 10000))
         table.append(row)
     return {
         "status": "success",
@@ -437,7 +456,7 @@ def process_generic_node(params: RunParameters) -> Dict:
             f"Starting general processing at {datetime.now().isoformat()}",
             f"Processing with environment: {params.runEnv}",
             "Processing completed",
-            f"Generated random table with {num_cols} columns and {num_rows} rows"
+            f"Generated random table with {num_cols} columns and {num_rows} rows, with mixed text and numeric columns."
         ],
         "calculation_results": {
             "headers": headers,
