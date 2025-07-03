@@ -16,11 +16,12 @@ import ReactFlow, {
     Position,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { FaCheckCircle, FaTimesCircle, FaSpinner, FaCircle, FaPlay, FaStop, FaUndo, FaChevronLeft, FaFolder, FaGripLines, FaChartBar, FaTable, FaFileAlt, FaExclamationTriangle } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaSpinner, FaCircle, FaPlay, FaStop, FaUndo, FaChevronLeft, FaChevronUp, FaFolder, FaGripLines, FaChartBar, FaTable, FaFileAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { ApiService } from '@/app/services/api';
 import { buildDependencyMap, buildDownstreamMap, runNodeWithDependencies, getAllDownstreamNodes } from '@/app/utils/graph-utils';
 import { HandlerContext, HandlerContextType } from '@/app/controls/completeness/HandlerContext';
 import AgGridTable from '@/app/utils/AgGridTable';
+import UserAttributesIcon from '@/app/components/UserAttributesIcon';
 
 // Node status types
 type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'standby' | 'stopped';
@@ -452,16 +453,42 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                             position: 'relative',
                         }}
                     >
-                        <img
-                            src="/nodecubic.png"
-                            alt="Node"
-                            style={{
+                        {id === 'reading_config_comp' ? (
+                            <div style={{
                                 width: '96%',
                                 height: '96%',
-                                objectFit: 'contain',
-                                background: 'none',
-                            }}
-                        />
+                                borderRadius: '50%',
+                                backgroundColor: 'rgb(78, 94, 103)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                aspectRatio: '1'
+                            }}>
+                                <div style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <UserAttributesIcon
+                                        size={32}
+                                        color="white"
+                                    />
+                                </div>
+                            </div>
+                        ) : (
+                            <img
+                                src="/nodecubic.png"
+                                alt="Node"
+                                style={{
+                                    width: '96%',
+                                    height: '96%',
+                                    objectFit: 'contain',
+                                    background: 'none',
+                                }}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
@@ -539,8 +566,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
             <div className="flex gap-1 mt-1 justify-center" style={{ width: 120 }}>
                 <div className="relative group">
                     <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-emerald-300"
-                        style={{ width: 26, height: 26 }}
+                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
+                        style={{
+                            width: 26,
+                            height: 26,
+                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
+                        }}
                         onClick={e => {
                             e.stopPropagation();
                             setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
@@ -559,8 +590,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 </div>
                 <div className="relative group">
                     <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-emerald-300"
-                        style={{ width: 26, height: 26 }}
+                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
+                        style={{
+                            width: 26,
+                            height: 26,
+                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
+                        }}
                         onClick={e => {
                             e.stopPropagation();
                             setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
@@ -579,8 +614,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 </div>
                 <div className="relative group">
                     <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-emerald-300"
-                        style={{ width: 26, height: 26 }}
+                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
+                        style={{
+                            width: 26,
+                            height: 26,
+                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
+                        }}
                         onClick={e => {
                             e.stopPropagation();
                             setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
@@ -599,8 +638,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 </div>
                 <div className="relative group">
                     <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-emerald-300"
-                        style={{ width: 26, height: 26 }}
+                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
+                        style={{
+                            width: 26,
+                            height: 26,
+                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
+                        }}
                         onClick={e => {
                             e.stopPropagation();
                             setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
@@ -675,7 +718,16 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [sidebarWidth, setSidebarWidth] = useState(320);
     const [isResizing, setIsResizing] = useState(false);
-    const [bottomBarHeight, setBottomBarHeight] = useState(96);
+    const [isBottomBarOpen, setIsBottomBarOpen] = useState(false);
+    const [activePanel, setActivePanel] = useState<'sidebar' | 'bottombar' | null>(null);
+    const [bottomBarHeight, setBottomBarHeight] = useState(() => {
+        // Responsive initial height based on screen size
+        if (typeof window !== 'undefined') {
+            const vh = window.innerHeight;
+            return Math.min(Math.max(vh * 0.3, 200), vh * 0.6); // 30-60% of viewport height
+        }
+        return 300; // fallback
+    });
     const [isResizingBottom, setIsResizingBottom] = useState(false);
     const [selectedNode, setSelectedNode] = useState<any>(null);
     const [areParamsApplied, setAreParamsApplied] = useState(() => {
@@ -691,7 +743,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const resizeRef = useRef<HTMLDivElement>(null);
     const minWidth = 48;
     const maxWidth = 800;
-    const minHeight = 32;
+    const minHeight = 200;  // Increase minimum height for better usability
+    const maxHeight = typeof window !== 'undefined' ? window.innerHeight * 0.8 : 600;  // Max 80% of viewport
     const nodeTimeouts = useRef<{ [key: string]: NodeJS.Timeout }>({});
     const [runParams, setRunParams] = useState<LocalRunParameters>(() => {
         const saved = localStorage.getItem(paramKey);
@@ -744,6 +797,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const [histogramSearch, setHistogramSearch] = useState('');
     const [histogramFilterType, setHistogramFilterType] = useState('contains');
     const [histogramFilterValue, setHistogramFilterValue] = useState('');
+
+    // Column selector for Data Output tab
+    const [columnSearch, setColumnSearch] = useState('');
+    const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
+    const [showAllColumns, setShowAllColumns] = useState(true);
 
     // Restore nodes from localStorage if available, otherwise use initialNodes
     const restoredNodes = (() => {
@@ -1070,7 +1128,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
             if (isResizingBottom) {
                 const height = document.documentElement.clientHeight - e.clientY;
-                setBottomBarHeight(Math.max(minHeight, height));
+                const clampedHeight = Math.min(Math.max(height, minHeight), maxHeight);
+                setBottomBarHeight(clampedHeight);
             }
         };
 
@@ -1088,7 +1147,26 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isResizing, isResizingBottom]);
+    }, [isResizing, isResizingBottom, minHeight, maxHeight]);
+
+    // Handle window resize to adjust bottom bar responsively
+    useEffect(() => {
+        const handleWindowResize = () => {
+            const vh = window.innerHeight;
+            const newMaxHeight = vh * 0.8;
+            const newMinHeight = 200;
+
+            // Adjust bottom bar height if it's outside the new bounds
+            setBottomBarHeight(prev => {
+                if (prev > newMaxHeight) return newMaxHeight;
+                if (prev < newMinHeight) return newMinHeight;
+                return prev;
+            });
+        };
+
+        window.addEventListener('resize', handleWindowResize);
+        return () => window.removeEventListener('resize', handleWindowResize);
+    }, []);
 
     // Update localStorage whenever nodeOutputs changes
     useEffect(() => {
@@ -1437,7 +1515,15 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 </h1>
                             </div>
                         </div>
-                        <div className="h-[calc(100vh-180px)] bg-white">
+                        <div
+                            className="bg-white"
+                            style={{
+                                height: isBottomBarOpen
+                                    ? `calc(100vh - 180px - ${bottomBarHeight}px)`
+                                    : `calc(100vh - 180px - 48px)`
+                            }}
+                            onClick={() => setActivePanel(null)}
+                        >
                             <ReactFlow
                                 nodes={nodes}
                                 edges={edges}
@@ -1468,196 +1554,368 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         </div>
                     </div>
 
-                    {/* Bottom Output Bar with Resize Handle */}
+                    {/* Bottom Data View Bar with Resize Handle */}
                     <div
-                        className="relative bg-[#F5F5F5] border-t border-slate-200"
-                        style={{ height: `${bottomBarHeight}px`, minHeight: '120px', maxHeight: '50vh' }}
+                        className={`
+                            relative bg-[#F5F5F5] border-t border-slate-200
+                            transition-all duration-300 ease-in-out
+                            ${!isBottomBarOpen ? 'h-12' : ''}
+                        `}
+                        style={{
+                            height: isBottomBarOpen ? `${bottomBarHeight}px` : '48px',
+                            minHeight: isBottomBarOpen ? `${minHeight}px` : '48px',
+                            maxHeight: isBottomBarOpen ? `${maxHeight}px` : '48px',
+                            transition: isResizingBottom ? 'none' : undefined,
+                            zIndex: activePanel === 'bottombar' ? 50 : 10
+                        }}
+                        onDoubleClick={() => !isResizingBottom && setIsBottomBarOpen(!isBottomBarOpen)}
+                        onClick={() => setActivePanel('bottombar')}
                     >
-                        {/* Resize Handle */}
-                        <div
-                            className={`
-                                absolute -top-1 left-0 w-full h-2 cursor-row-resize z-10
-                                ${isResizingBottom ? 'bg-slate-700' : 'bg-transparent hover:bg-slate-700/30'}
-                                transition-colors
-                            `}
-                            onMouseDown={(e) => {
-                                e.preventDefault();
-                                setIsResizingBottom(true);
-                            }}
-                        >
-                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <FaGripLines className="text-slate-700/70" />
+                        {/* Resize Handle - only show when open */}
+                        {isBottomBarOpen && (
+                            <div
+                                className={`
+                                    absolute -top-1 left-0 w-full h-2 cursor-row-resize z-10
+                                    ${isResizingBottom ? 'bg-slate-700' : 'bg-transparent hover:bg-slate-700/30'}
+                                    transition-colors
+                                `}
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    setIsResizingBottom(true);
+                                }}
+                            >
+                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                                    <FaGripLines className="text-slate-700/70" />
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Output Bar Content */}
-                        <div className="h-full px-4 overflow-y-auto">
-                            {selectedNode ? (
-                                <div className="flex-1 text-sm text-slate-300 h-full overflow-hidden">
-                                    {/* Tab Buttons */}
-                                    <div className="flex gap-2 border-b border-slate-700/50 mb-2">
-                                        <button onClick={() => setSelectedTab('histogram')} className={`px-2 py-1 rounded-t ${selectedTab === 'histogram' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Histogram</button>
-                                        <button onClick={() => setSelectedTab('data')} className={`px-2 py-1 rounded-t ${selectedTab === 'data' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Data Output</button>
-                                        <button onClick={() => setSelectedTab('log')} className={`px-2 py-1 rounded-t ${selectedTab === 'log' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Log</button>
-                                        <button onClick={() => setSelectedTab('fail')} className={`px-2 py-1 rounded-t ${selectedTab === 'fail' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Fail Message</button>
-                                    </div>
-                                    {/* Tab Content */}
-                                    <div className="mt-2">
-                                        {selectedTab === 'histogram' && (
-                                            <div>
-                                                {/* Show all column names (headers) in a vertical scrollable list with search */}
-                                                {selectedNode.data.output?.calculation_results?.headers ? (
-                                                    <div className="flex flex-col h-full">
-                                                        <div className="mb-2">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <span className="font-semibold text-black text-sm">Data Columns ({selectedNode.data.output.calculation_results.headers.length} total)</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <select
-                                                                    value={histogramFilterType}
-                                                                    onChange={e => setHistogramFilterType(e.target.value)}
-                                                                    className="px-3 py-1 rounded bg-white text-black text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                                >
-                                                                    <option value="contains">Contains</option>
-                                                                    <option value="equals">Equals</option>
-                                                                    <option value="startsWith">Starts With</option>
-                                                                    <option value="endsWith">Ends With</option>
-                                                                </select>
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Filter value..."
-                                                                    value={histogramFilterValue}
-                                                                    onChange={e => setHistogramFilterValue(e.target.value)}
-                                                                    className="px-3 py-1 rounded bg-white text-black text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1"
-                                                                    style={{ minWidth: 120 }}
-                                                                />
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setHistogramFilterValue('');
-                                                                        setHistogramFilterType('contains');
-                                                                    }}
-                                                                    className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-black text-sm border border-gray-300 transition-colors"
-                                                                >
-                                                                    Reset
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <div
-                                                            className="ag-theme-alpine border border-gray-300 rounded bg-white"
-                                                            style={{
-                                                                height: '350px',
-                                                                overflow: 'auto'
-                                                            }}
-                                                        >
-                                                            <div className="p-3">
-                                                                {(() => {
-                                                                    const filteredHeaders = selectedNode.data.output.calculation_results.headers.filter((header: string) => {
-                                                                        if (!histogramFilterValue) return true;
-
-                                                                        const headerLower = header.toLowerCase();
-                                                                        const filterValueLower = histogramFilterValue.toLowerCase();
-
-                                                                        switch (histogramFilterType) {
-                                                                            case 'equals':
-                                                                                return headerLower === filterValueLower;
-                                                                            case 'startsWith':
-                                                                                return headerLower.startsWith(filterValueLower);
-                                                                            case 'endsWith':
-                                                                                return headerLower.endsWith(filterValueLower);
-                                                                            case 'contains':
-                                                                            default:
-                                                                                return headerLower.includes(filterValueLower);
-                                                                        }
-                                                                    });
-
-                                                                    return filteredHeaders.length > 0 ? (
-                                                                        <ul className="space-y-1">
-                                                                            {filteredHeaders.map((header: string, idx: number) => (
-                                                                                <li key={idx} className="inline-block bg-white border border-gray-200 text-black rounded px-3 py-2 text-sm hover:bg-gray-50 transition-colors shadow-sm" title={header}>
-                                                                                    <span className="text-gray-600 mr-2 font-medium">#{idx + 1}</span>
-                                                                                    <span className="font-normal">{header}</span>
-                                                                                </li>
-                                                                            ))}
-                                                                            <div className="mt-3 text-black text-sm border-t border-gray-200 pt-2">
-                                                                                Showing {filteredHeaders.length} of {selectedNode.data.output.calculation_results.headers.length} columns
-                                                                            </div>
-                                                                        </ul>
-                                                                    ) : (
-                                                                        <div className="text-black text-sm">No columns found matching the filter criteria.</div>
-                                                                    );
-                                                                })()}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div>No columns found.</div>
-                                                )}
-                                            </div>
-                                        )}
-                                        {selectedTab === 'data' && (
-                                            <div>
-                                                {/* Calculation Results as AG Grid */}
-                                                {selectedNode.data.output?.calculation_results?.headers && selectedNode.data.output?.calculation_results?.table ? (
-                                                    <AgGridTable
-                                                        columns={selectedNode.data.output.calculation_results.headers.map((header: string) => ({ headerName: header, field: header }))}
-                                                        rowData={selectedNode.data.output.calculation_results.table.map((row: any[]) => {
-                                                            const obj: any = {};
-                                                            selectedNode.data.output.calculation_results.headers.forEach((header: string, idx: number) => {
-                                                                obj[header] = row[idx];
-                                                            });
-                                                            return obj;
-                                                        })}
-                                                        height={350}
-                                                    />
-                                                ) : selectedNode.data.output?.calculation_results ? (
-                                                    <div>
-                                                        <h3 className="text-emerald-400 font-medium mb-2">Calculation Results:</h3>
-                                                        <div className="bg-slate-900/50 rounded p-2">
-                                                            <pre className="text-slate-300 whitespace-pre-wrap">
-                                                                {JSON.stringify(selectedNode.data.output.calculation_results, null, 2)}
-                                                            </pre>
-                                                        </div>
-                                                    </div>
-                                                ) : 'No data output.'}
-                                            </div>
-                                        )}
-                                        {selectedTab === 'log' && (
-                                            <div>
-                                                {/* Execution Logs */}
-                                                {selectedNode.data.output?.execution_logs ? (
-                                                    <div>
-                                                        <h3 className="text-emerald-400 font-medium mb-2">Execution Logs:</h3>
-                                                        <div className="bg-slate-900/50 rounded p-2 space-y-1">
-                                                            {selectedNode.data.output.execution_logs.map((log: string, index: number) => (
-                                                                <div key={index} className="text-slate-300">
-                                                                    {log}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ) : 'No logs.'}
-                                            </div>
-                                        )}
-                                        {selectedTab === 'fail' && (
-                                            <div>
-                                                {/* Fail Message only if node failed */}
-                                                {selectedNode.data.status === 'failed' && selectedNode.data.output?.fail_message ? (
-                                                    <div className="bg-red-900/50 rounded p-2 text-red-300">
-                                                        {selectedNode.data.output.fail_message}
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-slate-400">No fail message (node did not fail)</div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-slate-400">
-                                    Select a node to view its output
-                                </div>
+                        {/* Header Bar */}
+                        <div className={`
+                            flex items-center h-12 px-4 border-b border-slate-700/50
+                            ${isBottomBarOpen ? 'justify-between' : 'justify-center'}
+                        `}>
+                            {isBottomBarOpen && (
+                                <span className="text-black font-medium">
+                                    Data View
+                                </span>
                             )}
+                            <FaChevronUp
+                                className={`
+                                    text-slate-700/70 cursor-pointer transition-transform duration-300 hover:text-slate-600
+                                    ${isBottomBarOpen ? '' : 'rotate-180'}
+                                `}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsBottomBarOpen(!isBottomBarOpen);
+                                }}
+                            />
                         </div>
+
+                        {/* Content - only show when open */}
+                        {isBottomBarOpen && (
+                            <div className="h-[calc(100%-3rem)] px-4 overflow-y-auto">
+                                {selectedNode ? (
+                                    <div className="flex-1 text-sm text-slate-300 h-full overflow-hidden">
+                                        {/* Tab Buttons */}
+                                        <div className="flex gap-2 border-b border-slate-700/50 mb-2">
+                                            <button onClick={() => setSelectedTab('histogram')} className={`px-2 py-1 rounded-t ${selectedTab === 'histogram' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Histogram</button>
+                                            <button onClick={() => setSelectedTab('data')} className={`px-2 py-1 rounded-t ${selectedTab === 'data' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Data Output</button>
+                                            <button onClick={() => setSelectedTab('log')} className={`px-2 py-1 rounded-t ${selectedTab === 'log' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Log</button>
+                                            <button onClick={() => setSelectedTab('fail')} className={`px-2 py-1 rounded-t ${selectedTab === 'fail' ? 'bg-slate-800 text-emerald-400' : 'bg-slate-700 text-slate-300'}`}>Fail Message</button>
+                                        </div>
+                                        {/* Tab Content */}
+                                        <div className="mt-2">
+                                            {selectedTab === 'histogram' && (
+                                                <div>
+                                                    {/* Show all column names (headers) in a vertical scrollable list with search */}
+                                                    {selectedNode.data.output?.calculation_results?.headers ? (
+                                                        <div className="flex flex-col h-full">
+                                                            <div className="mb-2">
+                                                                <div className="flex items-center gap-2 mb-2">
+                                                                    <span className="font-semibold text-black text-sm">Data Columns ({selectedNode.data.output.calculation_results.headers.length} total)</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <select
+                                                                        value={histogramFilterType}
+                                                                        onChange={e => setHistogramFilterType(e.target.value)}
+                                                                        className="px-3 py-1 rounded bg-white text-black text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                                    >
+                                                                        <option value="contains">Contains</option>
+                                                                        <option value="equals">Equals</option>
+                                                                        <option value="startsWith">Starts With</option>
+                                                                        <option value="endsWith">Ends With</option>
+                                                                    </select>
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Filter value..."
+                                                                        value={histogramFilterValue}
+                                                                        onChange={e => setHistogramFilterValue(e.target.value)}
+                                                                        className="px-3 py-1 rounded bg-white text-black text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex-1"
+                                                                        style={{ minWidth: 120 }}
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setHistogramFilterValue('');
+                                                                            setHistogramFilterType('contains');
+                                                                        }}
+                                                                        className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-black text-sm border border-gray-300 transition-colors"
+                                                                    >
+                                                                        Reset
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <div
+                                                                className="ag-theme-alpine border border-gray-300 rounded bg-white"
+                                                                style={{
+                                                                    height: `${bottomBarHeight - 168}px`, // Dynamic height - space for header, tabs and padding
+                                                                    overflow: 'auto'
+                                                                }}
+                                                            >
+                                                                <div className="p-3">
+                                                                    {(() => {
+                                                                        const filteredHeaders = selectedNode.data.output.calculation_results.headers.filter((header: string) => {
+                                                                            if (!histogramFilterValue) return true;
+
+                                                                            const headerLower = header.toLowerCase();
+                                                                            const filterValueLower = histogramFilterValue.toLowerCase();
+
+                                                                            switch (histogramFilterType) {
+                                                                                case 'equals':
+                                                                                    return headerLower === filterValueLower;
+                                                                                case 'startsWith':
+                                                                                    return headerLower.startsWith(filterValueLower);
+                                                                                case 'endsWith':
+                                                                                    return headerLower.endsWith(filterValueLower);
+                                                                                case 'contains':
+                                                                                default:
+                                                                                    return headerLower.includes(filterValueLower);
+                                                                            }
+                                                                        });
+
+                                                                        return filteredHeaders.length > 0 ? (
+                                                                            <ul className="space-y-1">
+                                                                                {filteredHeaders.map((header: string, idx: number) => (
+                                                                                    <li key={idx} className="inline-block bg-white border border-gray-200 text-black rounded px-3 py-2 text-sm hover:bg-gray-50 transition-colors shadow-sm" title={header}>
+                                                                                        <span className="text-gray-600 mr-2 font-medium">#{idx + 1}</span>
+                                                                                        <span className="font-normal">{header}</span>
+                                                                                    </li>
+                                                                                ))}
+                                                                                <div className="mt-3 text-black text-sm border-t border-gray-200 pt-2">
+                                                                                    Showing {filteredHeaders.length} of {selectedNode.data.output.calculation_results.headers.length} columns
+                                                                                </div>
+                                                                            </ul>
+                                                                        ) : (
+                                                                            <div className="text-black text-sm">No columns found matching the filter criteria.</div>
+                                                                        );
+                                                                    })()}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div>No columns found.</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {selectedTab === 'data' && (
+                                                <div>
+                                                    {/* Column Selection and Data Output */}
+                                                    {selectedNode.data.output?.calculation_results?.headers && selectedNode.data.output?.calculation_results?.table ? (
+                                                        <div className="flex flex-col h-full">
+                                                            {/* Column Filter Section - Compact */}
+                                                            <div className="mb-2 border-b border-gray-200 pb-2">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="font-medium text-black text-xs">
+                                                                        Columns ({selectedNode.data.output.calculation_results.headers.length})
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setShowAllColumns(true);
+                                                                            setSelectedColumns([]);
+                                                                        }}
+                                                                        className="px-2 py-0.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+                                                                    >
+                                                                        All
+                                                                    </button>
+                                                                </div>
+
+                                                                {/* Compact Search Input */}
+                                                                <div className="relative mb-1">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Search columns..."
+                                                                        value={columnSearch}
+                                                                        onChange={(e) => setColumnSearch(e.target.value)}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter') {
+                                                                                e.preventDefault();
+                                                                                const filteredColumns = selectedNode.data.output.calculation_results.headers.filter((header: string) =>
+                                                                                    header.toLowerCase().includes(columnSearch.toLowerCase())
+                                                                                );
+
+                                                                                // Add matching columns to selection if not already added
+                                                                                const newColumns = filteredColumns.filter((col: string) => !selectedColumns.includes(col));
+                                                                                if (newColumns.length > 0) {
+                                                                                    setSelectedColumns(prev => [...prev, ...newColumns]);
+                                                                                    setShowAllColumns(false);
+                                                                                }
+                                                                                setColumnSearch('');
+                                                                            }
+                                                                        }}
+                                                                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                                    />
+                                                                </div>
+
+                                                                {/* Compact Column Suggestions */}
+                                                                {columnSearch && (
+                                                                    <div className="mb-1 max-h-16 overflow-y-auto border border-gray-200 rounded bg-white text-xs">
+                                                                        {selectedNode.data.output.calculation_results.headers
+                                                                            .filter((header: string) =>
+                                                                                header.toLowerCase().includes(columnSearch.toLowerCase()) &&
+                                                                                !selectedColumns.includes(header)
+                                                                            )
+                                                                            .slice(0, 8)
+                                                                            .map((header: string) => (
+                                                                                <div
+                                                                                    key={header}
+                                                                                    className="px-2 py-1 hover:bg-blue-50 cursor-pointer text-black"
+                                                                                    onClick={() => {
+                                                                                        setSelectedColumns(prev => [...prev, header]);
+                                                                                        setShowAllColumns(false);
+                                                                                        setColumnSearch('');
+                                                                                    }}
+                                                                                >
+                                                                                    {header}
+                                                                                </div>
+                                                                            ))
+                                                                        }
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Compact Selected Column Tags */}
+                                                                {selectedColumns.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-1">
+                                                                        {selectedColumns.map((column: string) => (
+                                                                            <span
+                                                                                key={column}
+                                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded"
+                                                                            >
+                                                                                {column}
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedColumns(prev => prev.filter(col => col !== column));
+                                                                                        if (selectedColumns.length === 1) {
+                                                                                            setShowAllColumns(true);
+                                                                                        }
+                                                                                    }}
+                                                                                    className="text-blue-600 hover:text-blue-800 font-medium"
+                                                                                >
+                                                                                    ×
+                                                                                </button>
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* AG Grid with filtered columns */}
+                                                            <div className="flex-1">
+                                                                <AgGridTable
+                                                                    columns={(() => {
+                                                                        const headers = showAllColumns
+                                                                            ? selectedNode.data.output.calculation_results.headers
+                                                                            : selectedColumns.length > 0
+                                                                                ? selectedColumns
+                                                                                : selectedNode.data.output.calculation_results.headers;
+                                                                        return headers.map((header: string) => ({
+                                                                            headerName: header,
+                                                                            field: header
+                                                                        }));
+                                                                    })()}
+                                                                    rowData={selectedNode.data.output.calculation_results.table.map((row: any[]) => {
+                                                                        const obj: any = {};
+                                                                        const headers = showAllColumns
+                                                                            ? selectedNode.data.output.calculation_results.headers
+                                                                            : selectedColumns.length > 0
+                                                                                ? selectedColumns
+                                                                                : selectedNode.data.output.calculation_results.headers;
+
+                                                                        headers.forEach((header: string) => {
+                                                                            const originalIndex = selectedNode.data.output.calculation_results.headers.indexOf(header);
+                                                                            obj[header] = row[originalIndex];
+                                                                        });
+                                                                        return obj;
+                                                                    })}
+                                                                    height={bottomBarHeight - 160} // Compact filter uses less space
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ) : selectedNode.data.output?.calculation_results ? (
+                                                        <div>
+                                                            <h3 className="text-emerald-400 font-medium mb-2">Calculation Results:</h3>
+                                                            <div
+                                                                className="bg-slate-900/50 rounded p-2 overflow-y-auto"
+                                                                style={{ height: `${bottomBarHeight - 128}px` }}
+                                                            >
+                                                                <pre className="text-slate-300 whitespace-pre-wrap">
+                                                                    {JSON.stringify(selectedNode.data.output.calculation_results, null, 2)}
+                                                                </pre>
+                                                            </div>
+                                                        </div>
+                                                    ) : 'No data output.'}
+                                                </div>
+                                            )}
+                                            {selectedTab === 'log' && (
+                                                <div>
+                                                    {/* Execution Logs */}
+                                                    {selectedNode.data.output?.execution_logs ? (
+                                                        <div>
+                                                            <h3 className="text-emerald-400 font-medium mb-2">Execution Logs:</h3>
+                                                            <div
+                                                                className="bg-slate-900/50 rounded p-2 space-y-1 overflow-y-auto"
+                                                                style={{ height: `${bottomBarHeight - 128}px` }}
+                                                            >
+                                                                {selectedNode.data.output.execution_logs.map((log: string, index: number) => (
+                                                                    <div key={index} className="text-slate-300">
+                                                                        {log}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ) : 'No logs.'}
+                                                </div>
+                                            )}
+                                            {selectedTab === 'fail' && (
+                                                <div>
+                                                    {/* Fail Message only if node failed */}
+                                                    {selectedNode.data.status === 'failed' && selectedNode.data.output?.fail_message ? (
+                                                        <div
+                                                            className="bg-red-900/50 rounded p-2 text-red-300 overflow-y-auto"
+                                                            style={{ height: `${bottomBarHeight - 128}px` }}
+                                                        >
+                                                            {selectedNode.data.output.fail_message}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-slate-400">No fail message (node did not fail)</div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-slate-400">
+                                        Select a node to view its output
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Collapsed state indicator */}
+                        {!isBottomBarOpen && (
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-black">
+                                Data View
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -1671,9 +1929,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 `}
                     style={{
                         width: isSidebarOpen ? `${sidebarWidth}px` : '48px',
-                        transition: isResizing ? 'none' : undefined
+                        transition: isResizing ? 'none' : undefined,
+                        zIndex: activePanel === 'sidebar' ? 50 : 20
                     }}
                     onDoubleClick={() => !isResizing && setIsSidebarOpen(!isSidebarOpen)}
+                    onClick={() => setActivePanel('sidebar')}
                 >
                     {/* Resize Handle */}
                     <div
