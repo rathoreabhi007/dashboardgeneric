@@ -42,22 +42,22 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 class NodeType(str, Enum):
     CONFIG_COMP = "reading_config_comp"
-    FILE_SEARCH_SRC = "file_searching_src"
-    FILE_SEARCH_TGT = "file_searching_tgt"
-    HARMONISATION_SRC = "harmonisation_src"
-    SRC_ENRICHMENT = "src_enrichment"
-    DATA_TRANSFORM = "data_transform"
-    HARMONISATION_TGT = "harmonisation_tgt"
-    TGT_ENRICHMENT = "tgt_enrichment"
-    TGT_DATA_TRANSFORM = "tgt_data_transform"
-    COMBINE_DATA = "combine_data"
-    APPLY_RULES = "apply_rules"
-    OUTPUT_RULES = "output_rules"
-    BREAK_ROLLING = "break_rolling"
-    PRE_HARMONISATION_SRC = "pre_harmonisation_src"
-    PRE_HARMONISATION_TGT = "pre_harmonisation_tgt"
-    ENRICHMENT_FILE_SEARCH_SRC = "enrichment_file_search_src"
-    ENRICHMENT_FILE_SEARCH_TGT = "enrichment_file_search_tgt"
+    READ_SRC_COMP = "read_src_comp"
+    READ_TGT_COMP = "read_tgt_comp"
+    PRE_HARMONISATION_SRC_COMP = "pre_harmonisation_src_comp"
+    PRE_HARMONISATION_TGT_COMP = "pre_harmonisation_tgt_comp"
+    HARMONISATION_SRC_COMP = "harmonisation_src_comp"
+    HARMONISATION_TGT_COMP = "harmonisation_tgt_comp"
+    ENRICHMENT_FILE_SEARCH_SRC_COMP = "enrichment_file_search_src_comp"
+    ENRICHMENT_FILE_SEARCH_TGT_COMP = "enrichment_file_search_tgt_comp"
+    ENRICHMENT_SRC_COMP = "enrichment_src_comp"
+    ENRICHMENT_TGT_COMP = "enrichment_tgt_comp"
+    DATA_TRANSFORM_SRC_COMP = "data_transform_src_comp"
+    DATA_TRANSFORM_TGT_COMP = "data_transform_tgt_comp"
+    COMBINE_DATA_COMP = "combine_data_comp"
+    APPLY_RULES_COMP = "apply_rules_comp"
+    OUTPUT_RULES_COMP = "output_rules_comp"
+    BREAK_ROLLING_COMP = "break_rolling_comp"
 
 class RunParameters(BaseModel):
     expectedRunDate: str
@@ -278,7 +278,7 @@ def process_pre_harmonisation_node(params: RunParameters, previous_outputs: Opti
     
     try:
         # Get previous node output
-        prev_node_id = f"file_searching_{flow_type}"
+        prev_node_id = f"read_{flow_type}_comp"
         if not previous_outputs or prev_node_id not in previous_outputs:
             raise ValueError(f"No input data from {prev_node_id}")
             
@@ -478,7 +478,7 @@ def process_enrichment_file_search_node(params: RunParameters, previous_outputs:
     
     try:
         # Get previous node output (harmonisation)
-        prev_node_id = f"harmonisation_{flow_type}"
+        prev_node_id = f"harmonisation_{flow_type}_comp"
         if not previous_outputs or prev_node_id not in previous_outputs:
             raise ValueError(f"No input data from {prev_node_id}")
             

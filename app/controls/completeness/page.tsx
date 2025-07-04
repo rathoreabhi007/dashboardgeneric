@@ -22,6 +22,15 @@ import { buildDependencyMap, buildDownstreamMap, runNodeWithDependencies, getAll
 import { HandlerContext, HandlerContextType } from '@/app/controls/completeness/HandlerContext';
 import AgGridTable from '@/app/utils/AgGridTable';
 import UserAttributesIcon from '@/app/components/UserAttributesIcon';
+import DocumentSearchIcon from '@/app/components/DocumentSearchIcon';
+import LibraryBooksIcon from '@/app/components/LibraryBooksIcon';
+import TableEditIcon from '@/app/components/TableEditIcon';
+import DatasetLinkedIcon from '@/app/components/DatasetLinkedIcon';
+import TableConvertIcon from '@/app/components/TableConvertIcon';
+import StacksIcon from '@/app/components/StacksIcon';
+import DataInfoAlertIcon from '@/app/components/DataInfoAlertIcon';
+import OutputIcon from '@/app/components/OutputIcon';
+import ChangeCircleIcon from '@/app/components/ChangeCircleIcon';
 
 // Node status types
 type NodeStatus = 'idle' | 'running' | 'completed' | 'failed' | 'standby' | 'stopped';
@@ -52,78 +61,78 @@ const initialNodes: Node[] = [
         draggable: false
     },
     {
-        id: 'file_searching_src',
+        id: 'read_src_comp',
         type: 'custom',
-        data: { fullName: 'File_Searching_SRC', status: 'idle' },
+        data: { fullName: 'Read_SRC_Comp', status: 'idle' },
         position: { x: 300, y: 80 },
         draggable: false
     },
     {
-        id: 'file_searching_tgt',
+        id: 'read_tgt_comp',
         type: 'custom',
-        data: { fullName: 'File_Searching_TGT', status: 'idle' },
+        data: { fullName: 'Read_TGT_Comp', status: 'idle' },
         position: { x: 300, y: 420 },
         draggable: false
     },
     // Top flow nodes (SRC)
     {
-        id: 'pre_harmonisation_src',
+        id: 'pre_harmonisation_src_comp',
         type: 'custom',
         data: { fullName: 'Reading & Pre-Harmonisation_SRC', status: 'idle' },
         position: { x: 500, y: 80 },
         draggable: false
     },
     {
-        id: 'harmonisation_src',
+        id: 'harmonisation_src_comp',
         type: 'custom',
         data: { fullName: 'Harmonisation_SRC', status: 'idle' },
         position: { x: 700, y: 80 },
         draggable: false
     },
     {
-        id: 'enrichment_file_search_src',
+        id: 'enrichment_file_search_src_comp',
         type: 'custom',
         data: { fullName: 'Enrichment File Search_SRC', status: 'idle' },
         position: { x: 900, y: 80 },
         draggable: false
     },
     {
-        id: 'src_enrichment',
+        id: 'enrichment_src_comp',
         type: 'custom',
-        data: { fullName: 'SRC Enrichment', status: 'idle' },
+        data: { fullName: 'Enrichment_SRC', status: 'idle' },
         position: { x: 1100, y: 80 },
         draggable: false
     },
     {
-        id: 'data_transform',
+        id: 'data_transform_src_comp',
         type: 'custom',
-        data: { fullName: 'Data Transform Post Enrichment', status: 'idle' },
+        data: { fullName: 'Data Transform Post Enrichment_SRC', status: 'idle' },
         position: { x: 1300, y: 80 },
         draggable: false
     },
     {
-        id: 'combine_data',
+        id: 'combine_data_comp',
         type: 'custom',
         data: { fullName: 'Combine SRC and TGT Data', status: 'idle' },
         position: { x: 1500, y: 250 },
         draggable: false
     },
     {
-        id: 'apply_rules',
+        id: 'apply_rules_comp',
         type: 'custom',
         data: { fullName: 'Apply Rec Rules & Break Explain', status: 'idle' },
         position: { x: 1700, y: 250 },
         draggable: false
     },
     {
-        id: 'output_rules',
+        id: 'output_rules_comp',
         type: 'custom',
         data: { fullName: 'Output Rules', status: 'idle' },
         position: { x: 1900, y: 250 },
         draggable: false
     },
     {
-        id: 'break_rolling',
+        id: 'break_rolling_comp',
         type: 'custom',
         data: { fullName: 'BreakRolling Details', status: 'idle' },
         position: { x: 2100, y: 250 },
@@ -131,37 +140,37 @@ const initialNodes: Node[] = [
     },
     // Bottom flow nodes (TGT)
     {
-        id: 'pre_harmonisation_tgt',
+        id: 'pre_harmonisation_tgt_comp',
         type: 'custom',
         data: { fullName: 'Reading & Pre-Harmonisation_TGT', status: 'idle' },
         position: { x: 500, y: 420 },
         draggable: false
     },
     {
-        id: 'harmonisation_tgt',
+        id: 'harmonisation_tgt_comp',
         type: 'custom',
         data: { fullName: 'Harmonisation_TGT', status: 'idle' },
         position: { x: 700, y: 420 },
         draggable: false
     },
     {
-        id: 'enrichment_file_search_tgt',
+        id: 'enrichment_file_search_tgt_comp',
         type: 'custom',
         data: { fullName: 'Enrichment File Search_TGT', status: 'idle' },
         position: { x: 900, y: 420 },
         draggable: false
     },
     {
-        id: 'tgt_enrichment',
+        id: 'enrichment_tgt_comp',
         type: 'custom',
-        data: { fullName: 'TGT Enrichment', status: 'idle' },
+        data: { fullName: 'Enrichment_TGT', status: 'idle' },
         position: { x: 1100, y: 420 },
         draggable: false
     },
     {
-        id: 'tgt_data_transform',
+        id: 'data_transform_tgt_comp',
         type: 'custom',
-        data: { fullName: 'Data Transform Post Enrichment', status: 'idle' },
+        data: { fullName: 'Data Transform Post Enrichment_TGT', status: 'idle' },
         position: { x: 1300, y: 420 },
         draggable: false
     }
@@ -170,11 +179,11 @@ const initialNodes: Node[] = [
 const initialEdges: Edge[] = [
     // Initial flow to SRC
     {
-        id: 'config-to-file-search-src',
+        id: 'config-to-read-src',
         source: 'reading_config_comp',
-        target: 'file_searching_src',
+        target: 'read_src_comp',
         sourceHandle: 'reading_config_comp-source',
-        targetHandle: 'file_searching_src-target',
+        targetHandle: 'read_src_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -182,147 +191,147 @@ const initialEdges: Edge[] = [
     {
         id: 'config-to-file-search-tgt',
         source: 'reading_config_comp',
-        target: 'file_searching_tgt',
+        target: 'read_tgt_comp',
         sourceHandle: 'reading_config_comp-source',
-        targetHandle: 'file_searching_tgt-target',
+        targetHandle: 'read_tgt_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     // Top flow edges (SRC)
     {
-        id: 'file-search-to-pre-harmonisation-src',
-        source: 'file_searching_src',
-        target: 'pre_harmonisation_src',
-        sourceHandle: 'file_searching_src-source',
-        targetHandle: 'pre_harmonisation_src-target',
+        id: 'read-src-to-pre-harmonisation-src',
+        source: 'read_src_comp',
+        target: 'pre_harmonisation_src_comp',
+        sourceHandle: 'read_src_comp-source',
+        targetHandle: 'pre_harmonisation_src_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'pre-harmonisation-to-harmonisation-src',
-        source: 'pre_harmonisation_src',
-        target: 'harmonisation_src',
-        sourceHandle: 'pre_harmonisation_src-source',
-        targetHandle: 'harmonisation_src-target',
+        source: 'pre_harmonisation_src_comp',
+        target: 'harmonisation_src_comp',
+        sourceHandle: 'pre_harmonisation_src_comp-source',
+        targetHandle: 'harmonisation_src_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'harmonisation-to-enrichment-search-src',
-        source: 'harmonisation_src',
-        target: 'enrichment_file_search_src',
-        sourceHandle: 'harmonisation_src-source',
-        targetHandle: 'enrichment_file_search_src-target',
+        source: 'harmonisation_src_comp',
+        target: 'enrichment_file_search_src_comp',
+        sourceHandle: 'harmonisation_src_comp-source',
+        targetHandle: 'enrichment_file_search_src_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'enrichment-search-to-enrichment-src',
-        source: 'enrichment_file_search_src',
-        target: 'src_enrichment',
-        sourceHandle: 'enrichment_file_search_src-source',
-        targetHandle: 'src_enrichment-target',
+        source: 'enrichment_file_search_src_comp',
+        target: 'enrichment_src_comp',
+        sourceHandle: 'enrichment_file_search_src_comp-source',
+        targetHandle: 'enrichment_src_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'enrichment-to-transform',
-        source: 'src_enrichment',
-        target: 'data_transform',
-        sourceHandle: 'src_enrichment-source',
-        targetHandle: 'data_transform-target',
+        source: 'enrichment_src_comp',
+        target: 'data_transform_src_comp',
+        sourceHandle: 'enrichment_src_comp-source',
+        targetHandle: 'data_transform_src_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'transform-to-combine',
-        source: 'data_transform',
-        target: 'combine_data',
-        sourceHandle: 'data_transform-source',
-        targetHandle: 'combine_data-target',
+        source: 'data_transform_src_comp',
+        target: 'combine_data_comp',
+        sourceHandle: 'data_transform_src_comp-source',
+        targetHandle: 'combine_data_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     // Bottom flow edges (TGT)
     {
-        id: 'file-search-to-pre-harmonisation-tgt',
-        source: 'file_searching_tgt',
-        target: 'pre_harmonisation_tgt',
-        sourceHandle: 'file_searching_tgt-source',
-        targetHandle: 'pre_harmonisation_tgt-target',
+        id: 'read-tgt-to-pre-harmonisation-tgt',
+        source: 'read_tgt_comp',
+        target: 'pre_harmonisation_tgt_comp',
+        sourceHandle: 'read_tgt_comp-source',
+        targetHandle: 'pre_harmonisation_tgt_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'pre-harmonisation-to-harmonisation-tgt',
-        source: 'pre_harmonisation_tgt',
-        target: 'harmonisation_tgt',
-        sourceHandle: 'pre_harmonisation_tgt-source',
-        targetHandle: 'harmonisation_tgt-target',
+        source: 'pre_harmonisation_tgt_comp',
+        target: 'harmonisation_tgt_comp',
+        sourceHandle: 'pre_harmonisation_tgt_comp-source',
+        targetHandle: 'harmonisation_tgt_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'harmonisation-to-enrichment-search-tgt',
-        source: 'harmonisation_tgt',
-        target: 'enrichment_file_search_tgt',
-        sourceHandle: 'harmonisation_tgt-source',
-        targetHandle: 'enrichment_file_search_tgt-target',
+        source: 'harmonisation_tgt_comp',
+        target: 'enrichment_file_search_tgt_comp',
+        sourceHandle: 'harmonisation_tgt_comp-source',
+        targetHandle: 'enrichment_file_search_tgt_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'enrichment-search-to-enrichment-tgt',
-        source: 'enrichment_file_search_tgt',
-        target: 'tgt_enrichment',
-        sourceHandle: 'enrichment_file_search_tgt-source',
-        targetHandle: 'tgt_enrichment-target',
+        source: 'enrichment_file_search_tgt_comp',
+        target: 'enrichment_tgt_comp',
+        sourceHandle: 'enrichment_file_search_tgt_comp-source',
+        targetHandle: 'enrichment_tgt_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'enrichment-to-transform-tgt',
-        source: 'tgt_enrichment',
-        target: 'tgt_data_transform',
-        sourceHandle: 'tgt_enrichment-source',
-        targetHandle: 'tgt_data_transform-target',
+        source: 'enrichment_tgt_comp',
+        target: 'data_transform_tgt_comp',
+        sourceHandle: 'enrichment_tgt_comp-source',
+        targetHandle: 'data_transform_tgt_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'transform-to-combine-tgt',
-        source: 'tgt_data_transform',
-        target: 'combine_data',
-        sourceHandle: 'tgt_data_transform-source',
-        targetHandle: 'combine_data-target',
+        source: 'data_transform_tgt_comp',
+        target: 'combine_data_comp',
+        sourceHandle: 'data_transform_tgt_comp-source',
+        targetHandle: 'combine_data_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     // Final flow edges
     {
         id: 'combine-to-rules',
-        source: 'combine_data',
-        target: 'apply_rules',
-        sourceHandle: 'combine_data-source',
-        targetHandle: 'apply_rules-target',
+        source: 'combine_data_comp',
+        target: 'apply_rules_comp',
+        sourceHandle: 'combine_data_comp-source',
+        targetHandle: 'apply_rules_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'rules-to-output',
-        source: 'apply_rules',
-        target: 'output_rules',
-        sourceHandle: 'apply_rules-source',
-        targetHandle: 'output_rules-target',
+        source: 'apply_rules_comp',
+        target: 'output_rules_comp',
+        sourceHandle: 'apply_rules_comp-source',
+        targetHandle: 'output_rules_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
     {
         id: 'output-to-break',
-        source: 'output_rules',
-        target: 'break_rolling',
-        sourceHandle: 'output_rules-source',
-        targetHandle: 'break_rolling-target',
+        source: 'output_rules_comp',
+        target: 'break_rolling_comp',
+        sourceHandle: 'output_rules_comp-source',
+        targetHandle: 'break_rolling_comp-target',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     }
@@ -413,7 +422,14 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
             <Handle
                 type="target"
                 position={Position.Left}
-                style={{ background: '#334155', width: '8px', height: '8px', cursor: 'pointer' }}
+                style={{
+                    background: '#10b981',
+                    border: '2px solid #ffffff',
+                    width: '12px',
+                    height: '12px',
+                    cursor: 'pointer',
+                    borderRadius: '50%'
+                }}
                 id={`${id}-target`}
             />
             <div
@@ -443,7 +459,7 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 >
                     <div
                         style={{
-                            backgroundColor: 'rgb(78, 94, 103)', // Node color
+                            backgroundColor: 'rgb(8, 54, 82)', // Node color
                             borderRadius: '50%',
                             width: 60,
                             height: 60,
@@ -453,42 +469,101 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                             position: 'relative',
                         }}
                     >
-                        {id === 'reading_config_comp' ? (
-                            <div style={{
-                                width: '96%',
-                                height: '96%',
-                                borderRadius: '50%',
-                                backgroundColor: 'rgb(78, 94, 103)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                aspectRatio: '1'
-                            }}>
-                                <div style={{
-                                    width: '32px',
-                                    height: '32px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}>
-                                    <UserAttributesIcon
-                                        size={32}
-                                        color="white"
-                                    />
-                                </div>
-                            </div>
-                        ) : (
-                            <img
-                                src="/nodecubic.png"
-                                alt="Node"
-                                style={{
-                                    width: '96%',
-                                    height: '96%',
-                                    objectFit: 'contain',
-                                    background: 'none',
-                                }}
-                            />
-                        )}
+                        {(() => {
+                            // Function to get the appropriate icon based on node ID
+                            const getNodeIcon = (nodeId: string) => {
+                                // Reading config node
+                                if (nodeId === 'reading_config_comp') {
+                                    return <UserAttributesIcon size={44} color="white" />;
+                                }
+                                // File searching/reading nodes
+                                else if (nodeId === 'read_src_comp' || nodeId === 'read_tgt_comp') {
+                                    return <DocumentSearchIcon size={44} color="white" />;
+                                }
+                                // Pre-harmonisation nodes (reading & pre-harmonisation)
+                                else if (nodeId.includes('pre_harmonisation')) {
+                                    return <LibraryBooksIcon size={44} color="white" />;
+                                }
+                                // Harmonisation nodes (but not pre-harmonisation)
+                                else if (nodeId.includes('harmonisation') && !nodeId.includes('pre_harmonisation')) {
+                                    return <TableEditIcon size={44} color="white" />;
+                                }
+                                // Enrichment file search nodes
+                                else if (nodeId.includes('enrichment_file_search')) {
+                                    return <DocumentSearchIcon size={44} color="white" />;
+                                }
+                                // Enrichment nodes (but not file search)
+                                else if (nodeId.includes('enrichment') && !nodeId.includes('file_search')) {
+                                    return <DatasetLinkedIcon size={44} color="white" />;
+                                }
+                                // Data transform nodes
+                                else if (nodeId.includes('data_transform')) {
+                                    return <TableConvertIcon size={44} color="white" />;
+                                }
+                                // Combine data node
+                                else if (nodeId === 'combine_data_comp') {
+                                    return <StacksIcon size={44} color="white" />;
+                                }
+                                // Apply rules node
+                                else if (nodeId === 'apply_rules_comp') {
+                                    return <DataInfoAlertIcon size={44} color="white" />;
+                                }
+                                // Output rules node
+                                else if (nodeId === 'output_rules_comp') {
+                                    return <OutputIcon size={44} color="white" />;
+                                }
+                                // Break rolling node
+                                else if (nodeId === 'break_rolling_comp') {
+                                    return <ChangeCircleIcon size={44} color="white" />;
+                                }
+                                // Default fallback
+                                else {
+                                    return (
+                                        <img
+                                            src="/nodecubic.png"
+                                            alt="Node"
+                                            style={{
+                                                width: '96%',
+                                                height: '96%',
+                                                objectFit: 'contain',
+                                                background: 'none',
+                                            }}
+                                        />
+                                    );
+                                }
+                            };
+
+                            const icon = getNodeIcon(id);
+
+                            // If it's an icon component (not the default image), wrap it in the styled container
+                            if (typeof icon.type === 'function') {
+                                return (
+                                    <div style={{
+                                        width: '96%',
+                                        height: '96%',
+                                        borderRadius: '50%',
+                                        backgroundColor: 'rgba(78, 94, 103, 0.15)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        aspectRatio: '1'
+                                    }}>
+                                        <div style={{
+                                            width: '48px',
+                                            height: '48px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}>
+                                            {icon}
+                                        </div>
+                                    </div>
+                                );
+                            } else {
+                                // For the default image, return it as-is
+                                return icon;
+                            }
+                        })()}
                     </div>
                 </div>
             </div>
@@ -664,7 +739,14 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
             <Handle
                 type="source"
                 position={Position.Right}
-                style={{ background: '#334155', width: '8px', height: '8px', cursor: 'pointer' }}
+                style={{
+                    background: '#10b981',
+                    border: '2px solid #ffffff',
+                    width: '12px',
+                    height: '12px',
+                    cursor: 'pointer',
+                    borderRadius: '50%'
+                }}
                 id={`${id}-source`}
             />
         </div>
@@ -1076,20 +1158,24 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         const nodeSequence = [
             // Top flow
             'reading_config_comp',
-            'file_searching_src',
-            'harmonisation_src',
-            'src_enrichment',
-            'data_transform',
+            'read_src_comp',
+            'pre_harmonisation_src_comp',
+            'harmonisation_src_comp',
+            'enrichment_file_search_src_comp',
+            'enrichment_src_comp',
+            'data_transform_src_comp',
             // Bottom flow
-            'file_searching_tgt',
-            'harmonisation_tgt',
-            'tgt_enrichment',
-            'tgt_data_transform',
+            'read_tgt_comp',
+            'pre_harmonisation_tgt_comp',
+            'harmonisation_tgt_comp',
+            'enrichment_file_search_tgt_comp',
+            'enrichment_tgt_comp',
+            'data_transform_tgt_comp',
             // Final flow
-            'combine_data',
-            'apply_rules',
-            'output_rules',
-            'break_rolling'
+            'combine_data_comp',
+            'apply_rules_comp',
+            'output_rules_comp',
+            'break_rolling_comp'
         ];
 
         try {
