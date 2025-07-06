@@ -459,7 +459,7 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 >
                     <div
                         style={{
-                            backgroundColor: 'rgb(8, 54, 82)', // Node color
+                            backgroundColor: 'rgb(5, 4, 90)', // Node color
                             borderRadius: '50%',
                             width: 60,
                             height: 60,
