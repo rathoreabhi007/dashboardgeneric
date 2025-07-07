@@ -881,9 +881,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
     const [histogramFilterValue, setHistogramFilterValue] = useState('');
 
     // Column selector for Data Output tab
-    const [columnSearch, setColumnSearch] = useState('');
-    const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
-    const [showAllColumns, setShowAllColumns] = useState(true);
+
 
     // Restore nodes from localStorage if available, otherwise use initialNodes
     const restoredNodes = (() => {
@@ -1809,130 +1807,23 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                     {selectedNode.data.output?.calculation_results?.headers && selectedNode.data.output?.calculation_results?.table ? (
                                                         <div className="flex flex-col h-full">
                                                             {/* Column Filter Section - Compact */}
-                                                            <div className="mb-2 border-b border-gray-200 pb-2">
-                                                                <div className="flex items-center gap-2 mb-1">
-                                                                    <span className="font-medium text-black text-xs">
-                                                                        Columns ({selectedNode.data.output.calculation_results.headers.length})
-                                                                    </span>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setShowAllColumns(true);
-                                                                            setSelectedColumns([]);
-                                                                        }}
-                                                                        className="px-2 py-0.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
-                                                                    >
-                                                                        All
-                                                                    </button>
-                                                                </div>
 
-                                                                {/* Compact Search Input */}
-                                                                <div className="relative mb-1">
-                                                                    <input
-                                                                        type="text"
-                                                                        placeholder="Search columns..."
-                                                                        value={columnSearch}
-                                                                        onChange={(e) => setColumnSearch(e.target.value)}
-                                                                        onKeyDown={(e) => {
-                                                                            if (e.key === 'Enter') {
-                                                                                e.preventDefault();
-                                                                                const filteredColumns = selectedNode.data.output.calculation_results.headers.filter((header: string) =>
-                                                                                    header.toLowerCase().includes(columnSearch.toLowerCase())
-                                                                                );
-
-                                                                                // Add matching columns to selection if not already added
-                                                                                const newColumns = filteredColumns.filter((col: string) => !selectedColumns.includes(col));
-                                                                                if (newColumns.length > 0) {
-                                                                                    setSelectedColumns(prev => [...prev, ...newColumns]);
-                                                                                    setShowAllColumns(false);
-                                                                                }
-                                                                                setColumnSearch('');
-                                                                            }
-                                                                        }}
-                                                                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                                    />
-                                                                </div>
-
-                                                                {/* Compact Column Suggestions */}
-                                                                {columnSearch && (
-                                                                    <div className="mb-1 max-h-16 overflow-y-auto border border-gray-200 rounded bg-white text-xs">
-                                                                        {selectedNode.data.output.calculation_results.headers
-                                                                            .filter((header: string) =>
-                                                                                header.toLowerCase().includes(columnSearch.toLowerCase()) &&
-                                                                                !selectedColumns.includes(header)
-                                                                            )
-                                                                            .slice(0, 8)
-                                                                            .map((header: string) => (
-                                                                                <div
-                                                                                    key={header}
-                                                                                    className="px-2 py-1 hover:bg-blue-50 cursor-pointer text-black"
-                                                                                    onClick={() => {
-                                                                                        setSelectedColumns(prev => [...prev, header]);
-                                                                                        setShowAllColumns(false);
-                                                                                        setColumnSearch('');
-                                                                                    }}
-                                                                                >
-                                                                                    {header}
-                                                                                </div>
-                                                                            ))
-                                                                        }
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Compact Selected Column Tags */}
-                                                                {selectedColumns.length > 0 && (
-                                                                    <div className="flex flex-wrap gap-1">
-                                                                        {selectedColumns.map((column: string) => (
-                                                                            <span
-                                                                                key={column}
-                                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded"
-                                                                            >
-                                                                                {column}
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        setSelectedColumns(prev => prev.filter(col => col !== column));
-                                                                                        if (selectedColumns.length === 1) {
-                                                                                            setShowAllColumns(true);
-                                                                                        }
-                                                                                    }}
-                                                                                    className="text-blue-600 hover:text-blue-800 font-medium"
-                                                                                >
-                                                                                    ×
-                                                                                </button>
-                                                                            </span>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                            </div>
 
                                                             {/* AG Grid with filtered columns */}
                                                             <div className="flex-1">
                                                                 <AgGridTable
-                                                                    columns={(() => {
-                                                                        const headers = showAllColumns
-                                                                            ? selectedNode.data.output.calculation_results.headers
-                                                                            : selectedColumns.length > 0
-                                                                                ? selectedColumns
-                                                                                : selectedNode.data.output.calculation_results.headers;
-                                                                        return headers.map((header: string) => ({
-                                                                            headerName: header,
-                                                                            field: header
-                                                                        }));
-                                                                    })()}
+                                                                    columns={selectedNode.data.output.calculation_results.headers.map((header: string) => ({
+                                                                        headerName: header,
+                                                                        field: header
+                                                                    }))}
                                                                     rowData={selectedNode.data.output.calculation_results.table.map((row: any[]) => {
                                                                         const obj: any = {};
-                                                                        const headers = showAllColumns
-                                                                            ? selectedNode.data.output.calculation_results.headers
-                                                                            : selectedColumns.length > 0
-                                                                                ? selectedColumns
-                                                                                : selectedNode.data.output.calculation_results.headers;
-
-                                                                        headers.forEach((header: string) => {
-                                                                            const originalIndex = selectedNode.data.output.calculation_results.headers.indexOf(header);
-                                                                            obj[header] = row[originalIndex];
+                                                                        selectedNode.data.output.calculation_results.headers.forEach((header: string, index: number) => {
+                                                                            obj[header] = row[index];
                                                                         });
                                                                         return obj;
                                                                     })}
-                                                                    height={bottomBarHeight - 160} // Compact filter uses less space
+                                                                    height={bottomBarHeight - 160}
                                                                 />
                                                             </div>
                                                         </div>
