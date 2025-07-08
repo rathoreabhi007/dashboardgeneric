@@ -64,14 +64,14 @@ const initialNodes: Node[] = [
         id: 'read_src_comp',
         type: 'custom',
         data: { fullName: 'Read_SRC_Comp', status: 'idle' },
-        position: { x: 300, y: 80 },
+        position: { x: 300, y: 100 },
         draggable: false
     },
     {
         id: 'read_tgt_comp',
         type: 'custom',
         data: { fullName: 'Read_TGT_Comp', status: 'idle' },
-        position: { x: 300, y: 420 },
+        position: { x: 300, y: 400 },
         draggable: false
     },
     // Top flow nodes (SRC)
@@ -79,35 +79,35 @@ const initialNodes: Node[] = [
         id: 'pre_harmonisation_src_comp',
         type: 'custom',
         data: { fullName: 'Reading & Pre-Harmonisation_SRC', status: 'idle' },
-        position: { x: 500, y: 80 },
+        position: { x: 500, y: 100 },
         draggable: false
     },
     {
         id: 'harmonisation_src_comp',
         type: 'custom',
         data: { fullName: 'Harmonisation_SRC', status: 'idle' },
-        position: { x: 700, y: 80 },
+        position: { x: 700, y: 100 },
         draggable: false
     },
     {
         id: 'enrichment_file_search_src_comp',
         type: 'custom',
         data: { fullName: 'Enrichment File Search_SRC', status: 'idle' },
-        position: { x: 900, y: 80 },
+        position: { x: 900, y: 100 },
         draggable: false
     },
     {
         id: 'enrichment_src_comp',
         type: 'custom',
         data: { fullName: 'Enrichment_SRC', status: 'idle' },
-        position: { x: 1100, y: 80 },
+        position: { x: 1100, y: 100 },
         draggable: false
     },
     {
         id: 'data_transform_src_comp',
         type: 'custom',
         data: { fullName: 'Data Transform Post Enrichment_SRC', status: 'idle' },
-        position: { x: 1300, y: 80 },
+        position: { x: 1300, y: 100 },
         draggable: false
     },
     {
@@ -143,35 +143,35 @@ const initialNodes: Node[] = [
         id: 'pre_harmonisation_tgt_comp',
         type: 'custom',
         data: { fullName: 'Reading & Pre-Harmonisation_TGT', status: 'idle' },
-        position: { x: 500, y: 420 },
+        position: { x: 500, y: 400 },
         draggable: false
     },
     {
         id: 'harmonisation_tgt_comp',
         type: 'custom',
         data: { fullName: 'Harmonisation_TGT', status: 'idle' },
-        position: { x: 700, y: 420 },
+        position: { x: 700, y: 400 },
         draggable: false
     },
     {
         id: 'enrichment_file_search_tgt_comp',
         type: 'custom',
         data: { fullName: 'Enrichment File Search_TGT', status: 'idle' },
-        position: { x: 900, y: 420 },
+        position: { x: 900, y: 400 },
         draggable: false
     },
     {
         id: 'enrichment_tgt_comp',
         type: 'custom',
         data: { fullName: 'Enrichment_TGT', status: 'idle' },
-        position: { x: 1100, y: 420 },
+        position: { x: 1100, y: 400 },
         draggable: false
     },
     {
         id: 'data_transform_tgt_comp',
         type: 'custom',
         data: { fullName: 'Data Transform Post Enrichment_TGT', status: 'idle' },
-        position: { x: 1300, y: 420 },
+        position: { x: 1300, y: 400 },
         draggable: false
     }
 ];
@@ -204,6 +204,7 @@ const initialEdges: Edge[] = [
         target: 'pre_harmonisation_src_comp',
         sourceHandle: 'read_src_comp-source',
         targetHandle: 'pre_harmonisation_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -213,6 +214,7 @@ const initialEdges: Edge[] = [
         target: 'harmonisation_src_comp',
         sourceHandle: 'pre_harmonisation_src_comp-source',
         targetHandle: 'harmonisation_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -222,6 +224,7 @@ const initialEdges: Edge[] = [
         target: 'enrichment_file_search_src_comp',
         sourceHandle: 'harmonisation_src_comp-source',
         targetHandle: 'enrichment_file_search_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -231,6 +234,7 @@ const initialEdges: Edge[] = [
         target: 'enrichment_src_comp',
         sourceHandle: 'enrichment_file_search_src_comp-source',
         targetHandle: 'enrichment_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -240,6 +244,7 @@ const initialEdges: Edge[] = [
         target: 'data_transform_src_comp',
         sourceHandle: 'enrichment_src_comp-source',
         targetHandle: 'data_transform_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -259,6 +264,7 @@ const initialEdges: Edge[] = [
         target: 'pre_harmonisation_tgt_comp',
         sourceHandle: 'read_tgt_comp-source',
         targetHandle: 'pre_harmonisation_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -268,6 +274,7 @@ const initialEdges: Edge[] = [
         target: 'harmonisation_tgt_comp',
         sourceHandle: 'pre_harmonisation_tgt_comp-source',
         targetHandle: 'harmonisation_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -277,6 +284,7 @@ const initialEdges: Edge[] = [
         target: 'enrichment_file_search_tgt_comp',
         sourceHandle: 'harmonisation_tgt_comp-source',
         targetHandle: 'enrichment_file_search_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -286,6 +294,7 @@ const initialEdges: Edge[] = [
         target: 'enrichment_tgt_comp',
         sourceHandle: 'enrichment_file_search_tgt_comp-source',
         targetHandle: 'enrichment_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -295,6 +304,7 @@ const initialEdges: Edge[] = [
         target: 'data_transform_tgt_comp',
         sourceHandle: 'enrichment_tgt_comp-source',
         targetHandle: 'data_transform_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -314,6 +324,7 @@ const initialEdges: Edge[] = [
         target: 'apply_rules_comp',
         sourceHandle: 'combine_data_comp-source',
         targetHandle: 'apply_rules_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -323,6 +334,7 @@ const initialEdges: Edge[] = [
         target: 'output_rules_comp',
         sourceHandle: 'apply_rules_comp-source',
         targetHandle: 'output_rules_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -332,6 +344,7 @@ const initialEdges: Edge[] = [
         target: 'break_rolling_comp',
         sourceHandle: 'output_rules_comp-source',
         targetHandle: 'break_rolling_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     }
@@ -419,32 +432,61 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
             }}
             onClick={handleClick}
         >
-            <Handle
-                type="target"
-                position={Position.Left}
-                style={{
-                    background: '#10b981',
-                    border: '2px solid #ffffff',
-                    width: '12px',
-                    height: '12px',
-                    cursor: 'pointer',
-                    borderRadius: '50%'
-                }}
-                id={`${id}-target`}
-            />
             <div
+                className="relative"
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '2px solid black',      // Outermost thin black border
+                    border: '3px solid #2a2a2a',      // Enhanced border
                     borderRadius: '50%',
                     width: 68,
                     height: 68,
-                    background: 'transparent',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    background: 'linear-gradient(145deg, #f0f0f0 0%, #d1d1d1 50%, #b8b8b8 100%)',
+                    boxShadow: `
+                        0 8px 16px rgba(0,0,0,0.3),
+                        0 4px 8px rgba(0,0,0,0.2),
+                        0 2px 4px rgba(0,0,0,0.1),
+                        inset 0 1px 0 rgba(255,255,255,0.8),
+                        inset 0 -1px 0 rgba(0,0,0,0.2)
+                    `,
+                    transform: 'perspective(500px) rotateX(5deg)',
                 }}
             >
+                <Handle
+                    type="target"
+                    position={Position.Left}
+                    style={{
+                        background: '#10b981',
+                        border: '2px solid #ffffff',
+                        width: '12px',
+                        height: '12px',
+                        cursor: 'pointer',
+                        borderRadius: '50%',
+                        top: '50%',
+                        left: '-18px',
+                        transform: 'translateY(-50%)',
+                        position: 'absolute'
+                    }}
+                    id={`${id}-target`}
+                />
+                <Handle
+                    type="source"
+                    position={Position.Right}
+                    style={{
+                        background: '#10b981',
+                        border: '2px solid #ffffff',
+                        width: '12px',
+                        height: '12px',
+                        cursor: 'pointer',
+                        borderRadius: '50%',
+                        top: '50%',
+                        right: '-18px',
+                        transform: 'translateY(-50%)',
+                        position: 'absolute'
+                    }}
+                    id={`${id}-source`}
+                />
                 <div
                     style={{
                         border: '4px solid white',    // Middle thick white border
@@ -454,12 +496,19 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'transparent',
+                        background: 'linear-gradient(145deg, #ffffff 0%, #f8f8f8 50%, #e8e8e8 100%)',
+                        boxShadow: `
+                            inset 0 2px 4px rgba(255,255,255,0.9),
+                            inset 0 -2px 4px rgba(0,0,0,0.1)
+                        `,
                     }}
                 >
                     <div
                         style={{
-                            backgroundColor: 'rgb(5, 4, 90)', // Node color
+                            background: `
+                                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%),
+                                linear-gradient(145deg, rgb(240, 20, 40) 0%, rgb(219, 0, 17) 50%, rgb(180, 0, 14) 100%)
+                            `,
                             borderRadius: '50%',
                             width: 60,
                             height: 60,
@@ -467,6 +516,13 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                             alignItems: 'center',
                             justifyContent: 'center',
                             position: 'relative',
+                            boxShadow: `
+                                0 4px 8px rgba(219, 0, 17, 0.4),
+                                0 2px 4px rgba(0,0,0,0.3),
+                                inset 0 1px 0 rgba(255,255,255,0.3),
+                                inset 0 -1px 0 rgba(0,0,0,0.2)
+                            `,
+                            border: '1px solid rgba(150, 0, 12, 0.8)',
                         }}
                     >
                         {(() => {
@@ -736,19 +792,6 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                     )}
                 </div>
             </div>
-            <Handle
-                type="source"
-                position={Position.Right}
-                style={{
-                    background: '#10b981',
-                    border: '2px solid #ffffff',
-                    width: '12px',
-                    height: '12px',
-                    cursor: 'pointer',
-                    borderRadius: '50%'
-                }}
-                id={`${id}-source`}
-            />
         </div>
     );
 });
@@ -1592,19 +1635,45 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 <div className="flex flex-col h-screen">
                     {/* Flow Container */}
                     <div className="flex-1 overflow-hidden">
-                        <div className="bg-[#F5F5F5] border-b border-slate-200 p-4">
-                            <div className="flex justify-center">
-                                <h1 className="text-2xl font-semibold text-black">
-                                    Generic Completeness Control
-                                </h1>
+                        <div className="bg-white border-b border-slate-200 p-4" style={{ marginLeft: '48px' }}>
+                            <div className="flex items-center justify-between">
+                                {/* HSBC Logo and Name - Left */}
+                                <div className="flex items-center flex-shrink-0">
+                                    <img src="/hsbc.png" alt="HSBC Logo" className="h-12 w-auto mr-2" />
+                                    <span className="text-black font-semibold text-lg">HSBC</span>
+                                </div>
+
+                                {/* Professional Title - Center */}
+                                <div className="flex-1 flex justify-center">
+                                    <h1 className="font-bold tracking-tight text-black" style={{ fontSize: '36px' }}>
+                                        GENERIC COMPLETENESS CONTROL
+                                    </h1>
+                                </div>
+
+                                {/* Right spacer for balance */}
+                                <div className="flex-shrink-0 w-20"></div>
                             </div>
                         </div>
                         <div
-                            className="bg-white"
+                            className="relative"
                             style={{
                                 height: isBottomBarOpen
-                                    ? `calc(100vh - 180px - ${bottomBarHeight}px)`
-                                    : `calc(100vh - 180px - 48px)`
+                                    ? `calc(100vh - 120px - ${bottomBarHeight}px)`
+                                    : `calc(100vh - 120px - 48px)`,
+                                marginLeft: '48px',
+                                background: `
+                                    linear-gradient(145deg, #e8e8e8 0%, #f5f5f5 25%, #f8f8f8 50%, #f0f0f0 75%, #e0e0e0 100%)
+                                `,
+                                boxShadow: `
+                                    inset 0 4px 8px rgba(0,0,0,0.15),
+                                    inset 0 2px 4px rgba(0,0,0,0.1),
+                                    inset 0 8px 16px rgba(0,0,0,0.05),
+                                    inset 0 -2px 4px rgba(255,255,255,0.8),
+                                    0 1px 0 rgba(255,255,255,0.9)
+                                `,
+                                border: '1px solid #d0d0d0',
+                                borderTop: '2px solid #c0c0c0',
+                                borderLeft: '2px solid #c0c0c0'
                             }}
                             onClick={() => setActivePanel(null)}
                         >
@@ -1641,7 +1710,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     {/* Bottom Data View Bar with Resize Handle */}
                     <div
                         className={`
-                            relative bg-[#F5F5F5] border-t border-slate-200
+                            relative bg-white border-t border-slate-200
                             transition-all duration-300 ease-in-out
                             ${!isBottomBarOpen ? 'h-12' : ''}
                         `}
@@ -1650,7 +1719,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             minHeight: isBottomBarOpen ? `${minHeight}px` : '48px',
                             maxHeight: isBottomBarOpen ? `${maxHeight}px` : '48px',
                             transition: isResizingBottom ? 'none' : undefined,
-                            zIndex: activePanel === 'bottombar' ? 50 : 10
+                            zIndex: activePanel === 'bottombar' ? 50 : 10,
+                            marginLeft: '48px'
                         }}
                         onDoubleClick={() => !isResizingBottom && setIsBottomBarOpen(!isBottomBarOpen)}
                         onClick={() => setActivePanel('bottombar')}
@@ -1698,7 +1768,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
                         {/* Content - only show when open */}
                         {isBottomBarOpen && (
-                            <div className="h-[calc(100%-3rem)] px-4 overflow-y-auto">
+                            <div className="h-[calc(100%-48px)] px-4 overflow-y-auto">
                                 {selectedNode ? (
                                     <div className="flex-1 text-sm text-slate-300 h-full overflow-hidden">
                                         {/* Tab Buttons */}
@@ -1752,7 +1822,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                             <div
                                                                 className="ag-theme-alpine border border-gray-300 rounded bg-white"
                                                                 style={{
-                                                                    height: `${bottomBarHeight - 168}px`, // Dynamic height - space for header, tabs and padding
+                                                                    height: `${bottomBarHeight - 140}px`, // Dynamic height - space for header, tabs and padding
                                                                     overflow: 'auto'
                                                                 }}
                                                             >
@@ -1823,7 +1893,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                                         });
                                                                         return obj;
                                                                     })}
-                                                                    height={bottomBarHeight - 160}
+                                                                    height={bottomBarHeight - 120}
                                                                 />
                                                             </div>
                                                         </div>
@@ -1832,7 +1902,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                             <h3 className="text-emerald-400 font-medium mb-2">Calculation Results:</h3>
                                                             <div
                                                                 className="bg-slate-900/50 rounded p-2 overflow-y-auto"
-                                                                style={{ height: `${bottomBarHeight - 128}px` }}
+                                                                style={{ height: `${bottomBarHeight - 100}px` }}
                                                             >
                                                                 <pre className="text-slate-300 whitespace-pre-wrap">
                                                                     {JSON.stringify(selectedNode.data.output.calculation_results, null, 2)}
@@ -1850,7 +1920,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                             <h3 className="text-emerald-400 font-medium mb-2">Execution Logs:</h3>
                                                             <div
                                                                 className="bg-slate-900/50 rounded p-2 space-y-1 overflow-y-auto"
-                                                                style={{ height: `${bottomBarHeight - 128}px` }}
+                                                                style={{ height: `${bottomBarHeight - 100}px` }}
                                                             >
                                                                 {selectedNode.data.output.execution_logs.map((log: string, index: number) => (
                                                                     <div key={index} className="text-slate-300">
@@ -1868,7 +1938,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                     {selectedNode.data.status === 'failed' && selectedNode.data.output?.fail_message ? (
                                                         <div
                                                             className="bg-red-900/50 rounded p-2 text-red-300 overflow-y-auto"
-                                                            style={{ height: `${bottomBarHeight - 128}px` }}
+                                                            style={{ height: `${bottomBarHeight - 100}px` }}
                                                         >
                                                             {selectedNode.data.output.fail_message}
                                                         </div>
@@ -1896,11 +1966,18 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     </div>
                 </div>
 
+                {/* Left Border */}
+                <div
+                    className="fixed left-0 top-0 h-full bg-white border-r border-slate-200 w-12"
+                    style={{ zIndex: 10 }}
+                >
+                </div>
+
                 {/* Right Sidebar */}
                 <div
                     ref={resizeRef}
                     className={`
-                        fixed right-0 top-0 h-full bg-[#F5F5F5] border-l border-slate-200
+                        fixed right-0 top-0 h-full bg-white border-l border-slate-200
                     transition-all duration-300 ease-in-out
                     ${!isSidebarOpen ? 'w-12' : ''}
                 `}
