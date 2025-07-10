@@ -1,0 +1,31 @@
+CRITICAL SYNTAX ERRORS FOUND IN REACT COMPONENT
+
+## Main Issues:
+
+1. BROKEN NODE IDS - Multiple node IDs have line breaks and malformed names:
+   - 'read src _ _comp' should be 'read_src_comp'
+   - 'pre_ harmonisation src _ _comp' should be 'pre_harmonisation_src_comp'
+   - Similar issues throughout the initialNodes array
+
+2. MISSING COMMAS - Many objects in arrays are missing closing commas
+
+3. EMPTY OBJECTS - Several empty {} objects that serve no purpose
+
+4. BROKEN EDGE REFERENCES - Edge source/target properties reference the broken node IDs
+
+5. INCOMPLETE OBJECTS - Some node objects are missing closing braces
+
+## Priority Fixes Needed:
+
+1. Fix all node IDs to use consistent underscore naming
+2. Add missing commas between array objects  
+3. Remove empty objects
+4. Update all edge references to match corrected node IDs
+5. Complete all object structures
+
+## Impact:
+These syntax errors prevent the React component from compiling and running.
+The component appears to be a data processing workflow visualization tool using ReactFlow.
+
+## Recommendation:
+Replace the initialNodes and initialEdges arrays entirely with properly formatted objects.
