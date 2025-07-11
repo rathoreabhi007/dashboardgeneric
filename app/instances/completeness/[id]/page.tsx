@@ -20,7 +20,7 @@ export default function CompletenessInstance({ params }: { params: Promise<{ id:
 
     if (!instanceId || !timestamp) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F5F5F5', color: 'black' }}>
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'white', color: 'black' }}>
                 <div className="text-black text-lg">Initializing instance...</div>
             </div>
         );

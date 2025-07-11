@@ -443,13 +443,13 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                     width: 68,
                     height: 68,
                     background: 'linear-gradient(145deg, #f0f0f0 0%, #d1d1d1 50%, #b8b8b8 100%)',
-                    boxShadow: `
-                        0 8px 16px rgba(0,0,0,0.3),
-                        0 4px 8px rgba(0,0,0,0.2),
-                        0 2px 4px rgba(0,0,0,0.1),
-                        inset 0 1px 0 rgba(255,255,255,0.8),
-                        inset 0 -1px 0 rgba(0,0,0,0.2)
-                    `,
+                    // boxShadow: `
+                    //     0 8px 16px rgba(0,0,0,0.3),
+                    //     0 4px 8px rgba(0,0,0,0.2),
+                    //     0 2px 4px rgba(0,0,0,0.1),
+                    //     inset 0 1px 0 rgba(255,255,255,0.8),
+                    //     inset 0 -1px 0 rgba(0,0,0,0.2)
+                    // `,
                     transform: 'perspective(500px) rotateX(5deg)',
                 }}
             >
@@ -497,10 +497,10 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                         alignItems: 'center',
                         justifyContent: 'center',
                         background: 'linear-gradient(145deg, #ffffff 0%, #f8f8f8 50%, #e8e8e8 100%)',
-                        boxShadow: `
-                            inset 0 2px 4px rgba(255,255,255,0.9),
-                            inset 0 -2px 4px rgba(0,0,0,0.1)
-                        `,
+                        // boxShadow: `
+                        //     inset 0 2px 4px rgba(255,255,255,0.9),
+                        //     inset 0 -2px 4px rgba(0,0,0,0.1)
+                        // `,
                     }}
                 >
                     <div
@@ -516,12 +516,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                             alignItems: 'center',
                             justifyContent: 'center',
                             position: 'relative',
-                            boxShadow: `
-                                0 4px 8px rgba(219, 0, 17, 0.4),
-                                0 2px 4px rgba(0,0,0,0.3),
-                                inset 0 1px 0 rgba(255,255,255,0.3),
-                                inset 0 -1px 0 rgba(0,0,0,0.2)
-                            `,
+                            // boxShadow: `
+                            //     0 4px 8px rgba(219, 0, 17, 0.4),
+                            //     0 2px 4px rgba(0,0,0,0.3),
+                            //     inset 0 1px 0 rgba(255,255,255,0.3),
+                            //     inset 0 -1px 0 rgba(0,0,0,0.2)
+                            // `,
                             border: '1px solid rgba(150, 0, 12, 0.8)',
                         }}
                     >
@@ -639,6 +639,8 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                     {data.status === 'standby' && <FaCircle className="text-white/80 w-3.5 h-3.5" />}
                 </div>
             </div>
+
+
             <div className="text-[10px] text-black mt-1 max-w-[80px] text-center font-medium">{data.fullName}</div>
             <div className="flex gap-1 mt-1">
                 <button
@@ -981,15 +983,33 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 : node
         ));
 
-        // Update edge colors based on source node status
+        // Update edge colors and labels based on source node status
         setEdges(eds => eds.map(edge => {
             if (edge.source === nodeId) {
+                const sourceOutput = nodeOutputs && nodeOutputs[nodeId];
+                const rowCount = sourceOutput?.calculation_results?.table?.length;
+
                 return {
                     ...edge,
                     style: {
                         ...edge.style,
                         stroke: status === 'completed' ? '#22c55e' : '#1e293b'
-                    }
+                    },
+                    label: status === 'completed' && rowCount && rowCount > 0 ?
+                        rowCount.toLocaleString() : undefined,
+                    labelStyle: {
+                        fill: '#1f2937',
+                        fontWeight: 'bold',
+                        fontSize: '10px'
+                    },
+                    labelBgStyle: {
+                        fill: '#ffffff',
+                        fillOpacity: 0.9,
+                        stroke: '#d1d5db',
+                        strokeWidth: 1
+                    },
+                    labelBgPadding: [4, 8],
+                    labelBgBorderRadius: 4
                 };
             }
             return edge;
@@ -1096,7 +1116,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             {Object.entries(runParams).map(([key, value]) => (
                 <div key={key} className="flex flex-col">
                     <label className="text-sm font-bold text-black mb-1">
-                        {key}
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
                         {invalidFields.has(key) && (
                             <span className="text-red-500 ml-1">*</span>
                         )}
@@ -1125,7 +1145,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                     setInvalidFields(newInvalidFields);
                                 }
                             }}
-                            placeholder={`Enter ${key.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
+                            placeholder={`Enter ${(key.charAt(0).toUpperCase() + key.slice(1)).replace(/([A-Z])/g, ' $1')}`}
                         />
                     )}
                     {invalidFields.has(key) && (
@@ -1551,7 +1571,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             });
         }
 
-        // Reset edge colors for all affected edges
+        // Reset edge colors and labels for all affected edges
         setEdges(eds => eds.map(edge => {
             if (toReset.includes(edge.source)) {
                 return {
@@ -1559,7 +1579,10 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     style: {
                         ...edge.style,
                         stroke: '#1e293b'
-                    }
+                    },
+                    label: undefined, // Clear the data count label
+                    labelStyle: undefined,
+                    labelBgStyle: undefined
                 };
             }
             return edge;
@@ -1576,6 +1599,35 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             }
         })));
     }, [areParamsApplied, setNodes]);
+
+    // Update edge labels when nodeOutputs change
+    useEffect(() => {
+        setEdges(eds => eds.map(edge => {
+            const sourceOutput = nodeOutputs && nodeOutputs[edge.source];
+            const rowCount = sourceOutput?.calculation_results?.table?.length;
+            const sourceNode = nodes.find(n => n.id === edge.source);
+            const sourceStatus = sourceNode?.data?.status;
+
+            return {
+                ...edge,
+                label: sourceStatus === 'completed' && rowCount && rowCount > 0 ?
+                    rowCount.toLocaleString() : undefined,
+                labelStyle: {
+                    fill: '#1f2937',
+                    fontWeight: 'bold',
+                    fontSize: '10px'
+                },
+                labelBgStyle: {
+                    fill: '#ffffff',
+                    fillOpacity: 0.9,
+                    stroke: '#d1d5db',
+                    strokeWidth: 1
+                },
+                labelBgPadding: [4, 8],
+                labelBgBorderRadius: 4
+            };
+        }));
+    }, [nodeOutputs, nodes, setEdges]);
 
     // Define nodeTypes with the required props
     const [selectedTab, setSelectedTab] = useState<string>('data');
@@ -1632,10 +1684,34 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         <HandlerContext.Provider value={{ runNode, resetNodeAndDownstream }}>
             <div className="min-h-screen" style={{ backgroundColor: 'white' }}>
                 {/* Main Content */}
-                <div className="flex flex-col h-screen">
+                <div
+                    className="flex flex-col h-screen transition-all duration-300 ease-in-out"
+                    style={{
+                        marginRight: isSidebarOpen ? `${sidebarWidth}px` : '48px'
+                    }}
+                >
                     {/* Flow Container */}
-                    <div className="flex-1 overflow-hidden">
-                        <div className="bg-white border-b border-slate-200 p-4" style={{ marginLeft: '48px' }}>
+                    <div
+                        className="flex-1 overflow-hidden flex flex-col"
+                        style={{
+                            height: isBottomBarOpen
+                                ? `calc(100vh - ${bottomBarHeight}px)`
+                                : 'calc(100vh - 48px)'
+                        }}
+                    >
+                        <div
+                            className="border-b border-slate-200 px-2 py-1"
+                            style={{
+                                backgroundColor: 'white',
+                                boxShadow: `
+                                    0 4px 8px rgba(0,0,0,0.15),
+                                    0 8px 16px rgba(0,0,0,0.1),
+                                    0 2px 4px rgba(0,0,0,0.1),
+                                    inset 0 2px 0 rgba(255,255,255,0.8),
+                                    inset 0 -2px 0 rgba(0,0,0,0.1)
+                                `
+                            }}
+                        >
                             <div className="flex items-center justify-between">
                                 {/* HSBC Logo and Name - Left */}
                                 <div className="flex items-center flex-shrink-0">
@@ -1645,7 +1721,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
                                 {/* Professional Title - Center */}
                                 <div className="flex-1 flex justify-center">
-                                    <h1 className="font-bold tracking-tight text-black" style={{ fontSize: '36px' }}>
+                                    <h1 className="text-2xl font-bold text-black">
                                         GENERIC COMPLETENESS CONTROL
                                     </h1>
                                 </div>
@@ -1655,25 +1731,18 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             </div>
                         </div>
                         <div
-                            className="relative"
+                            className="relative h-full"
                             style={{
-                                height: isBottomBarOpen
-                                    ? `calc(100vh - 120px - ${bottomBarHeight}px)`
-                                    : `calc(100vh - 120px - 48px)`,
-                                marginLeft: '48px',
-                                background: `
-                                    linear-gradient(145deg, #e8e8e8 0%, #f5f5f5 25%, #f8f8f8 50%, #f0f0f0 75%, #e0e0e0 100%)
-                                `,
+                                background: 'white',
                                 boxShadow: `
-                                    inset 0 4px 8px rgba(0,0,0,0.15),
-                                    inset 0 2px 4px rgba(0,0,0,0.1),
-                                    inset 0 8px 16px rgba(0,0,0,0.05),
-                                    inset 0 -2px 4px rgba(255,255,255,0.8),
-                                    0 1px 0 rgba(255,255,255,0.9)
+                                    inset 0 4px 8px rgba(0,0,0,0.08),
+                                    inset 0 2px 4px rgba(0,0,0,0.05),
+                                    inset 0 8px 16px rgba(0,0,0,0.02),
+                                    inset 0 -2px 4px rgba(255,255,255,0.9),
+                                    0 1px 0 rgba(255,255,255,0.95)
                                 `,
-                                border: '1px solid #d0d0d0',
-                                borderTop: '2px solid #c0c0c0',
-                                borderLeft: '2px solid #c0c0c0'
+                                border: '24px solid #f5f5f5',
+                                borderRadius: '8px'
                             }}
                             onClick={() => setActivePanel(null)}
                         >
@@ -1696,11 +1765,12 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 selectNodesOnDrag={false}
                                 onSelectionChange={onSelectionChange}
                                 multiSelectionKeyCode="Control"
+                                proOptions={{ hideAttribution: true }}
                             >
                                 <Background
-                                    color="#e5e7eb"
+                                    color="#f3f4f6"
                                     gap={20}
-                                    className="bg-transparent"
+                                    className="bg-white"
                                 />
                                 <Controls className="bg-slate-800 border border-slate-700/50 rounded-lg" />
                             </ReactFlow>
@@ -1720,9 +1790,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             maxHeight: isBottomBarOpen ? `${maxHeight}px` : '48px',
                             transition: isResizingBottom ? 'none' : undefined,
                             zIndex: activePanel === 'bottombar' ? 50 : 10,
-                            marginLeft: '48px'
+
                         }}
-                        onDoubleClick={() => !isResizingBottom && setIsBottomBarOpen(!isBottomBarOpen)}
                         onClick={() => setActivePanel('bottombar')}
                     >
                         {/* Resize Handle - only show when open */}
@@ -1745,15 +1814,20 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         )}
 
                         {/* Header Bar */}
-                        <div className={`
-                            flex items-center h-12 px-4 border-b border-slate-700/50
-                            ${isBottomBarOpen ? 'justify-between' : 'justify-center'}
-                        `}>
-                            {isBottomBarOpen && (
-                                <span className="text-black font-medium">
-                                    Data View
-                                </span>
-                            )}
+                        <div className="flex items-center justify-between h-12 px-4 border-b border-slate-700/50">
+                            {/* DataView Button - Left */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsBottomBarOpen(!isBottomBarOpen);
+                                }}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm font-medium transition-colors"
+                            >
+                                <FaTable className="w-3 h-3" />
+                                DataView
+                            </button>
+
+                            {/* Chevron Icon - Right */}
                             <FaChevronUp
                                 className={`
                                     text-slate-700/70 cursor-pointer transition-transform duration-300 hover:text-slate-600
@@ -1826,7 +1900,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                                     overflow: 'auto'
                                                                 }}
                                                             >
-                                                                <div className="p-3">
+                                                                <div className="p-0">
                                                                     {(() => {
                                                                         const filteredHeaders = selectedNode.data.output.calculation_results.headers.filter((header: string) => {
                                                                             if (!histogramFilterValue) return true;
@@ -1957,21 +2031,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             </div>
                         )}
 
-                        {/* Collapsed state indicator */}
-                        {!isBottomBarOpen && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-black">
-                                Data View
-                            </div>
-                        )}
+                        {/* Collapsed state indicator - removed since we now have the button */}
                     </div>
                 </div>
 
-                {/* Left Border */}
-                <div
-                    className="fixed left-0 top-0 h-full bg-white border-r border-slate-200 w-12"
-                    style={{ zIndex: 10 }}
-                >
-                </div>
+
 
                 {/* Right Sidebar */}
                 <div
@@ -2021,19 +2085,21 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     />
 
                     <div className={`
-                        flex items-center h-16 px-4 border-b border-slate-700/50
-                    ${isSidebarOpen ? 'justify-between' : 'justify-center'}
-                `}>
+                        flex items-center h-16 px-0 border-b border-slate-700/50
+                        ${isSidebarOpen ? 'justify-between' : 'justify-center'}
+                    `}>
                         {isSidebarOpen && (
-                            <span className="text-black font-medium">
-                                Run Parameters
-                            </span>
+                            <div className="flex-1 flex justify-center">
+                                <span className="text-black font-medium">
+                                    Run Parameters
+                                </span>
+                            </div>
                         )}
                         <FaChevronLeft
                             className={`
                                 text-slate-700/70 cursor-pointer transition-transform duration-300 hover:text-slate-600
-                            ${isSidebarOpen ? '' : 'rotate-180'}
-                        `}
+                                ${isSidebarOpen ? '' : 'rotate-180'}
+                            `}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setIsSidebarOpen(!isSidebarOpen);
@@ -2043,15 +2109,15 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
                     {/* Sidebar Content */}
                     {isSidebarOpen && (
-                        <div className="p-6 text-slate-300 overflow-y-auto max-h-[calc(100vh-4rem)]">
-                            <div className="space-y-6">
+                        <div className="px-2 py-2 text-slate-300 overflow-y-auto max-h-[calc(100vh-4rem)]">
+                            <div className="space-y-4">
                                 {/* Form fields with updated styling */}
                                 <div className="space-y-4">
                                     {renderParameterInputs()}
                                 </div>
 
                                 {/* Buttons Container */}
-                                <div className="pt-6 flex gap-4">
+                                <div className="pt-4 flex gap-4">
                                     <button
                                         onClick={handleApplyParams}
                                         className={`flex-1 px-4 py-3 bg-green-800 hover:bg-green-700 text-white rounded-lg text-sm 

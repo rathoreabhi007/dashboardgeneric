@@ -259,9 +259,8 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    backgroundColor: hasActiveFilter ? '#10b981' : '#64748b',
-                                    color: 'white',
-                                    border: 'none',
+                                    backgroundColor: 'transparent',
+                                    border: hasActiveFilter ? '1px solid #10b981' : '1px solid #64748b',
                                     borderRadius: '3px',
                                     cursor: 'pointer',
                                     fontSize: '10px',
@@ -269,13 +268,20 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                                 }}
                                 title={`Filter ${col.headerName || col.field}`}
                             >
-                                🔍
+                                <img
+                                    src="/filter-icon.svg"
+                                    alt="Filter"
+                                    style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        filter: 'brightness(0)'
+                                    }}
+                                />
                             </button>
                         </div>
                     );
                 },
                 filter: isNumeric ? 'agNumberColumnFilter' : 'agTextColumnFilter',
-                floatingFilter: true,
                 sortable: true,
                 resizable: true,
                 filterParams: isNumeric ? {
@@ -752,7 +758,6 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                         sortable: true,
                         filter: true,
                         resizable: true,
-                        floatingFilter: true,
                         minWidth: 100,
                         flex: 1
                     }}
