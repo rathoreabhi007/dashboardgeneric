@@ -47,6 +47,7 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
     const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set());
     const [availableValues, setAvailableValues] = useState<string[]>([]);
     const [filteredValues, setFilteredValues] = useState<string[]>([]);
+    const [dropdownPosition, setDropdownPosition] = useState<{ top: number, left: number }>({ top: 0, left: 0 });
 
     // Applied column filters
     const [columnFilters, setColumnFilters] = useState<{ [key: string]: Set<string> }>({});
@@ -106,6 +107,23 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
         }
     }, [columnFilterSearch, availableValues]);
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (showColumnFilter) {
+                const target = event.target as HTMLElement;
+                if (!target.closest('.column-filter-dropdown')) {
+                    setShowColumnFilter(false);
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showColumnFilter]);
+
     // Column visibility functions
     const toggleColumnVisibility = (columnField: string) => {
         const newVisible = new Set(visibleColumns);
@@ -132,8 +150,18 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
         );
     };
 
-    // Open column filter modal
-    const openColumnFilter = (columnField: string) => {
+    // Open column filter dropdown
+    const openColumnFilter = (columnField: string, event: React.MouseEvent) => {
+        // Use currentTarget instead of target to get the button element
+        const buttonRect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+        setDropdownPosition({
+            top: buttonRect.bottom + scrollTop + 5,
+            left: Math.max(10, Math.min(buttonRect.left + scrollLeft - 150, window.innerWidth - 330))
+        });
+
         setSelectedColumn(columnField);
         setColumnFilterSearch('');
 
@@ -196,11 +224,64 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
         .map(col => {
             const sampleValues = rowData.slice(0, 10).map(row => row[col.field]).filter(val => val != null);
             const isNumeric = sampleValues.length > 0 && sampleValues.every(val => !isNaN(Number(val)));
+            const hasActiveFilter = columnFilters[col.field] && columnFilters[col.field].size > 0;
 
             return {
                 ...col,
+                headerComponent: (params: any) => {
+                    return (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            gap: '4px'
+                        }}>
+                            <span style={{
+                                flex: 1,
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                color: '#1e293b',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                {col.headerName || col.field}
+                            </span>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openColumnFilter(col.field, e);
+                                }}
+                                style={{
+                                    width: '18px',
+                                    height: '18px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    backgroundColor: 'transparent',
+                                    border: hasActiveFilter ? '1px solid #10b981' : '1px solid #64748b',
+                                    borderRadius: '3px',
+                                    cursor: 'pointer',
+                                    fontSize: '10px',
+                                    flexShrink: 0
+                                }}
+                                title={`Filter ${col.headerName || col.field}`}
+                            >
+                                <img
+                                    src="/filter-icon.svg"
+                                    alt="Filter"
+                                    style={{
+                                        width: '14px',
+                                        height: '14px',
+                                        filter: 'brightness(0)'
+                                    }}
+                                />
+                            </button>
+                        </div>
+                    );
+                },
                 filter: isNumeric ? 'agNumberColumnFilter' : 'agTextColumnFilter',
-                floatingFilter: true,
                 sortable: true,
                 resizable: true,
                 filterParams: isNumeric ? {
@@ -611,56 +692,20 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                         )}
                     </div>
 
-                    {/* Column Value Filter Section */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '4px',
-                        backgroundColor: '#1e293b',
-                        borderRadius: '6px',
-                        border: '1px solid #475569'
-                    }}>
-                        <span style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                            Value Filter:
-                        </span>
-                        <select
-                            value={selectedColumn}
-                            onChange={(e) => setSelectedColumn(e.target.value)}
-                            style={{
-                                padding: '4px 8px',
-                                fontSize: '11px',
-                                backgroundColor: '#334155',
-                                color: '#e2e8f0',
-                                border: '1px solid #64748b',
-                                borderRadius: '3px',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <option value="">Select Column</option>
-                            {enhancedColumns.map(col => (
-                                <option key={col.field} value={col.field}>
-                                    {col.headerName || col.field}
-                                </option>
-                            ))}
-                        </select>
-                        <button
-                            onClick={() => selectedColumn && openColumnFilter(selectedColumn)}
-                            disabled={!selectedColumn}
-                            style={{
-                                padding: '4px 8px',
-                                fontSize: '11px',
-                                backgroundColor: selectedColumn ? '#10b981' : '#475569',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '3px',
-                                cursor: selectedColumn ? 'pointer' : 'not-allowed',
-                                fontWeight: '500'
-                            }}
-                        >
-                            🔍 Filter
-                        </button>
-                        {Object.keys(columnFilters).length > 0 && (
+                    {/* Clear All Filters Button */}
+                    {Object.keys(columnFilters).length > 0 && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '4px',
+                            backgroundColor: '#1e293b',
+                            borderRadius: '6px',
+                            border: '1px solid #475569'
+                        }}>
+                            <span style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                                Active Filters:
+                            </span>
                             <button
                                 onClick={clearAllColumnFilters}
                                 style={{
@@ -673,10 +718,10 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                                     cursor: 'pointer'
                                 }}
                             >
-                                Clear ({Object.keys(columnFilters).length})
+                                Clear All ({Object.keys(columnFilters).length})
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -713,7 +758,6 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                         sortable: true,
                         filter: true,
                         resizable: true,
-                        floatingFilter: true,
                         minWidth: 100,
                         flex: 1
                     }}
@@ -940,153 +984,148 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                 <span>Total: {totalRows} rows | Columns: {visibleColumns.size}/{columns.length} visible</span>
             </div>
 
-            {/* Column Filter Modal */}
+            {/* Column Filter Dropdown */}
             {showColumnFilter && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000
-                }}>
-                    <div style={{
+                <div
+                    className="column-filter-dropdown"
+                    style={{
+                        position: 'fixed',
+                        top: `${dropdownPosition.top}px`,
+                        left: `${dropdownPosition.left}px`,
                         backgroundColor: '#1e293b',
                         border: '1px solid #475569',
                         borderRadius: '8px',
                         width: '320px',
                         maxHeight: '500px',
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        zIndex: 9999,
+                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)'
+                    }}
+                >
+                    {/* Header */}
+                    <div style={{
+                        padding: '12px 16px',
+                        borderBottom: '1px solid #475569',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
                     }}>
-                        {/* Header */}
-                        <div style={{
-                            padding: '12px 16px',
-                            borderBottom: '1px solid #475569',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                        }}>
-                            <h3 style={{ margin: 0, fontSize: '14px', color: '#e2e8f0' }}>
-                                Filter: {columns.find(c => c.field === selectedColumn)?.headerName || selectedColumn}
-                            </h3>
-                            <button
-                                onClick={() => setShowColumnFilter(false)}
-                                style={{
-                                    backgroundColor: 'transparent',
-                                    border: 'none',
-                                    color: '#94a3b8',
-                                    fontSize: '16px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                ✕
-                            </button>
-                        </div>
+                        <h3 style={{ margin: 0, fontSize: '14px', color: '#e2e8f0' }}>
+                            Filter: {columns.find(c => c.field === selectedColumn)?.headerName || selectedColumn}
+                        </h3>
+                        <button
+                            onClick={() => setShowColumnFilter(false)}
+                            style={{
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                color: '#94a3b8',
+                                fontSize: '16px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            ✕
+                        </button>
+                    </div>
 
-                        {/* Search */}
-                        <div style={{ padding: '12px 16px', borderBottom: '1px solid #475569' }}>
+                    {/* Search */}
+                    <div style={{ padding: '12px 16px', borderBottom: '1px solid #475569' }}>
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={columnFilterSearch}
+                            onChange={(e) => setColumnFilterSearch(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '6px 8px',
+                                backgroundColor: '#334155',
+                                color: '#e2e8f0',
+                                border: '1px solid #64748b',
+                                borderRadius: '4px',
+                                fontSize: '11px'
+                            }}
+                        />
+                    </div>
+
+                    {/* Select All */}
+                    <div style={{ padding: '8px 16px', borderBottom: '1px solid #475569' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '11px', color: '#e2e8f0' }}>
                             <input
-                                type="text"
-                                placeholder="Search..."
-                                value={columnFilterSearch}
-                                onChange={(e) => setColumnFilterSearch(e.target.value)}
-                                style={{
-                                    width: '100%',
-                                    padding: '6px 8px',
-                                    backgroundColor: '#334155',
-                                    color: '#e2e8f0',
-                                    border: '1px solid #64748b',
-                                    borderRadius: '4px',
-                                    fontSize: '11px'
-                                }}
+                                type="checkbox"
+                                checked={selectedValues.size === filteredValues.length && filteredValues.length > 0}
+                                onChange={toggleSelectAll}
                             />
-                        </div>
+                            Select All
+                        </label>
+                    </div>
 
-                        {/* Select All */}
-                        <div style={{ padding: '8px 16px', borderBottom: '1px solid #475569' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '11px', color: '#e2e8f0' }}>
+                    {/* Values List */}
+                    <div style={{
+                        maxHeight: '250px',
+                        overflowY: 'auto',
+                        padding: '8px 0'
+                    }}>
+                        {filteredValues.map(value => (
+                            <label
+                                key={value}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '4px 16px',
+                                    cursor: 'pointer',
+                                    fontSize: '11px',
+                                    color: '#e2e8f0'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#334155'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
                                 <input
                                     type="checkbox"
-                                    checked={selectedValues.size === filteredValues.length && filteredValues.length > 0}
-                                    onChange={toggleSelectAll}
+                                    checked={selectedValues.has(value)}
+                                    onChange={() => toggleValue(value)}
                                 />
-                                Select All
+                                {value}
                             </label>
-                        </div>
+                        ))}
+                    </div>
 
-                        {/* Values List */}
-                        <div style={{
-                            maxHeight: '250px',
-                            overflowY: 'auto',
-                            padding: '8px 0'
-                        }}>
-                            {filteredValues.map(value => (
-                                <label
-                                    key={value}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        padding: '4px 16px',
-                                        cursor: 'pointer',
-                                        fontSize: '11px',
-                                        color: '#e2e8f0'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#334155'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedValues.has(value)}
-                                        onChange={() => toggleValue(value)}
-                                    />
-                                    {value}
-                                </label>
-                            ))}
-                        </div>
-
-                        {/* Footer */}
-                        <div style={{
-                            padding: '12px 16px',
-                            borderTop: '1px solid #475569',
-                            display: 'flex',
-                            gap: '8px',
-                            justifyContent: 'flex-end'
-                        }}>
-                            <button
-                                onClick={() => setShowColumnFilter(false)}
-                                style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: '#475569',
-                                    color: '#e2e8f0',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    fontSize: '11px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={applyColumnFilter}
-                                style={{
-                                    padding: '6px 12px',
-                                    backgroundColor: '#10b981',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    fontSize: '11px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                OK
-                            </button>
-                        </div>
+                    {/* Footer */}
+                    <div style={{
+                        padding: '12px 16px',
+                        borderTop: '1px solid #475569',
+                        display: 'flex',
+                        gap: '8px',
+                        justifyContent: 'flex-end'
+                    }}>
+                        <button
+                            onClick={() => setShowColumnFilter(false)}
+                            style={{
+                                padding: '6px 12px',
+                                backgroundColor: '#475569',
+                                color: '#e2e8f0',
+                                border: 'none',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={applyColumnFilter}
+                            style={{
+                                padding: '6px 12px',
+                                backgroundColor: '#10b981',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                fontSize: '11px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            OK
+                        </button>
                     </div>
                 </div>
             )}

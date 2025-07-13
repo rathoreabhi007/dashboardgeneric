@@ -64,14 +64,14 @@ const initialNodes: Node[] = [
         id: 'read_src_comp',
         type: 'custom',
         data: { fullName: 'Read_SRC_Comp', status: 'idle' },
-        position: { x: 300, y: 80 },
+        position: { x: 300, y: 100 },
         draggable: false
     },
     {
         id: 'read_tgt_comp',
         type: 'custom',
         data: { fullName: 'Read_TGT_Comp', status: 'idle' },
-        position: { x: 300, y: 420 },
+        position: { x: 300, y: 400 },
         draggable: false
     },
     // Top flow nodes (SRC)
@@ -79,35 +79,35 @@ const initialNodes: Node[] = [
         id: 'pre_harmonisation_src_comp',
         type: 'custom',
         data: { fullName: 'Reading & Pre-Harmonisation_SRC', status: 'idle' },
-        position: { x: 500, y: 80 },
+        position: { x: 500, y: 100 },
         draggable: false
     },
     {
         id: 'harmonisation_src_comp',
         type: 'custom',
         data: { fullName: 'Harmonisation_SRC', status: 'idle' },
-        position: { x: 700, y: 80 },
+        position: { x: 700, y: 100 },
         draggable: false
     },
     {
         id: 'enrichment_file_search_src_comp',
         type: 'custom',
         data: { fullName: 'Enrichment File Search_SRC', status: 'idle' },
-        position: { x: 900, y: 80 },
+        position: { x: 900, y: 100 },
         draggable: false
     },
     {
         id: 'enrichment_src_comp',
         type: 'custom',
         data: { fullName: 'Enrichment_SRC', status: 'idle' },
-        position: { x: 1100, y: 80 },
+        position: { x: 1100, y: 100 },
         draggable: false
     },
     {
         id: 'data_transform_src_comp',
         type: 'custom',
         data: { fullName: 'Data Transform Post Enrichment_SRC', status: 'idle' },
-        position: { x: 1300, y: 80 },
+        position: { x: 1300, y: 100 },
         draggable: false
     },
     {
@@ -143,35 +143,35 @@ const initialNodes: Node[] = [
         id: 'pre_harmonisation_tgt_comp',
         type: 'custom',
         data: { fullName: 'Reading & Pre-Harmonisation_TGT', status: 'idle' },
-        position: { x: 500, y: 420 },
+        position: { x: 500, y: 400 },
         draggable: false
     },
     {
         id: 'harmonisation_tgt_comp',
         type: 'custom',
         data: { fullName: 'Harmonisation_TGT', status: 'idle' },
-        position: { x: 700, y: 420 },
+        position: { x: 700, y: 400 },
         draggable: false
     },
     {
         id: 'enrichment_file_search_tgt_comp',
         type: 'custom',
         data: { fullName: 'Enrichment File Search_TGT', status: 'idle' },
-        position: { x: 900, y: 420 },
+        position: { x: 900, y: 400 },
         draggable: false
     },
     {
         id: 'enrichment_tgt_comp',
         type: 'custom',
         data: { fullName: 'Enrichment_TGT', status: 'idle' },
-        position: { x: 1100, y: 420 },
+        position: { x: 1100, y: 400 },
         draggable: false
     },
     {
         id: 'data_transform_tgt_comp',
         type: 'custom',
         data: { fullName: 'Data Transform Post Enrichment_TGT', status: 'idle' },
-        position: { x: 1300, y: 420 },
+        position: { x: 1300, y: 400 },
         draggable: false
     }
 ];
@@ -204,6 +204,7 @@ const initialEdges: Edge[] = [
         target: 'pre_harmonisation_src_comp',
         sourceHandle: 'read_src_comp-source',
         targetHandle: 'pre_harmonisation_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -213,6 +214,7 @@ const initialEdges: Edge[] = [
         target: 'harmonisation_src_comp',
         sourceHandle: 'pre_harmonisation_src_comp-source',
         targetHandle: 'harmonisation_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -222,6 +224,7 @@ const initialEdges: Edge[] = [
         target: 'enrichment_file_search_src_comp',
         sourceHandle: 'harmonisation_src_comp-source',
         targetHandle: 'enrichment_file_search_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -231,6 +234,7 @@ const initialEdges: Edge[] = [
         target: 'enrichment_src_comp',
         sourceHandle: 'enrichment_file_search_src_comp-source',
         targetHandle: 'enrichment_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -240,6 +244,7 @@ const initialEdges: Edge[] = [
         target: 'data_transform_src_comp',
         sourceHandle: 'enrichment_src_comp-source',
         targetHandle: 'data_transform_src_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -259,6 +264,7 @@ const initialEdges: Edge[] = [
         target: 'pre_harmonisation_tgt_comp',
         sourceHandle: 'read_tgt_comp-source',
         targetHandle: 'pre_harmonisation_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -268,6 +274,7 @@ const initialEdges: Edge[] = [
         target: 'harmonisation_tgt_comp',
         sourceHandle: 'pre_harmonisation_tgt_comp-source',
         targetHandle: 'harmonisation_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -277,6 +284,7 @@ const initialEdges: Edge[] = [
         target: 'enrichment_file_search_tgt_comp',
         sourceHandle: 'harmonisation_tgt_comp-source',
         targetHandle: 'enrichment_file_search_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -286,6 +294,7 @@ const initialEdges: Edge[] = [
         target: 'enrichment_tgt_comp',
         sourceHandle: 'enrichment_file_search_tgt_comp-source',
         targetHandle: 'enrichment_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -295,6 +304,7 @@ const initialEdges: Edge[] = [
         target: 'data_transform_tgt_comp',
         sourceHandle: 'enrichment_tgt_comp-source',
         targetHandle: 'data_transform_tgt_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -314,6 +324,7 @@ const initialEdges: Edge[] = [
         target: 'apply_rules_comp',
         sourceHandle: 'combine_data_comp-source',
         targetHandle: 'apply_rules_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -323,6 +334,7 @@ const initialEdges: Edge[] = [
         target: 'output_rules_comp',
         sourceHandle: 'apply_rules_comp-source',
         targetHandle: 'output_rules_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     },
@@ -332,6 +344,7 @@ const initialEdges: Edge[] = [
         target: 'break_rolling_comp',
         sourceHandle: 'output_rules_comp-source',
         targetHandle: 'break_rolling_comp-target',
+        type: 'straight',
         animated: false,
         style: { stroke: '#1e293b', strokeWidth: 2 }
     }
@@ -364,24 +377,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
     const { runNode, resetNodeAndDownstream } = useContext(HandlerContext) as HandlerContextType;
     const [isHovered, setIsHovered] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
+    const [showSourceTooltip, setShowSourceTooltip] = useState(false);
+    const [isOutputHovered, setIsOutputHovered] = useState(false); // <-- add this line
     const isRunning = data.status === 'running';
     const canReset = data.status === 'failed' || data.status === 'completed' || data.status === 'stopped';
     const isSelected = data.selected || false;
     const canRun = data.areParamsApplied && !isRunning;
-    const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-
-    const handleClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        // When a node is clicked, set it as selected with its output (default to empty object if missing)
-        const output = (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {};
-        setSelectedNode({
-            id,
-            data: {
-                ...data,
-                output
-            }
-        });
-    };
 
     // Base node style
     const baseStyle = {
@@ -417,34 +418,112 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 setIsHovered(false);
                 setShowTooltip(false);
             }}
-            onClick={handleClick}
         >
-            <Handle
-                type="target"
-                position={Position.Left}
-                style={{
-                    background: '#10b981',
-                    border: '2px solid #ffffff',
-                    width: '12px',
-                    height: '12px',
-                    cursor: 'pointer',
-                    borderRadius: '50%'
-                }}
-                id={`${id}-target`}
-            />
             <div
+                className="relative"
                 style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '2px solid black',      // Outermost thin black border
+                    border: '3px solid #2a2a2a',      // Enhanced border
                     borderRadius: '50%',
                     width: 68,
                     height: 68,
-                    background: 'transparent',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    background: 'linear-gradient(145deg, #f0f0f0 0%, #d1d1d1 50%, #b8b8b8 100%)',
+                    // boxShadow: `
+                    //     0 8px 16px rgba(0,0,0,0.3),
+                    //     0 4px 8px rgba(0,0,0,0.2),
+                    //     0 2px 4px rgba(0,0,0,0.1),
+                    //     inset 0 1px 0 rgba(255,255,255,0.8),
+                    //     inset 0 -1px 0 rgba(0,0,0,0.2)
+                    // `,
+                    transform: 'perspective(500px) rotateX(5deg)',
                 }}
             >
+                <Handle
+                    type="target"
+                    position={Position.Left}
+                    style={{
+                        background: '#10b981',
+                        border: '2px solid #ffffff',
+                        width: '12px',
+                        height: '12px',
+                        cursor: 'pointer',
+                        borderRadius: '50%',
+                        top: '50%',
+                        left: '-18px',
+                        transform: 'translateY(-50%)',
+                        position: 'absolute'
+                    }}
+                    id={`${id}-target`}
+                />
+                <Handle
+                    type="source"
+                    position={Position.Right}
+                    style={{
+                        background: '#10b981',
+                        border: '2px solid #ffffff',
+                        width: '12px',
+                        height: '12px',
+                        cursor: 'pointer',
+                        borderRadius: '50%',
+                        top: '50%',
+                        right: '-18px',
+                        transform: 'translateY(-50%)',
+                        position: 'absolute'
+                    }}
+                    id={`${id}-source`}
+                />
+                {/* Output handle for viewing data */}
+                <div
+                    style={{
+                        background: '#22c55e',
+                        border: `2px solid ${isOutputHovered ? '#000000' : '#d1d5db'}`,
+                        width: '16px',
+                        height: '16px',
+                        cursor: 'pointer',
+                        borderRadius: '50%',
+                        top: '50%',
+                        right: '-24px',
+                        transform: 'translateY(-50%)',
+                        position: 'absolute',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        zIndex: 10
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        // Set the selected node with its output data
+                        const output = (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {};
+                        setSelectedNode({
+                            id,
+                            data: {
+                                ...data,
+                                output
+                            }
+                        });
+                        // Set the default tab to 'data' for data output
+                        setSelectedTab('data');
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.2)';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                        setShowSourceTooltip(true);
+                        setIsOutputHovered(true); // <-- add this line
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                        setShowSourceTooltip(false);
+                        setIsOutputHovered(false); // <-- add this line
+                    }}
+                />
+                {showSourceTooltip && (
+                    <div className="absolute top-1/2 right-[-90px] transform -translate-y-1/2 px-2 py-1 text-[10px] 
+                        bg-slate-900 text-white rounded whitespace-nowrap z-50">
+                        Click to view data
+                    </div>
+                )}
                 <div
                     style={{
                         border: '4px solid white',    // Middle thick white border
@@ -454,12 +533,19 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'transparent',
+                        background: 'linear-gradient(145deg, #ffffff 0%, #f8f8f8 50%, #e8e8e8 100%)',
+                        // boxShadow: `
+                        //     inset 0 2px 4px rgba(255,255,255,0.9),
+                        //     inset 0 -2px 4px rgba(0,0,0,0.1)
+                        // `,
                     }}
                 >
                     <div
                         style={{
-                            backgroundColor: 'rgb(5, 4, 90)', // Node color
+                            background: `
+                                radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 50%),
+                                linear-gradient(145deg, rgb(240, 20, 40) 0%, rgb(219, 0, 17) 50%, rgb(180, 0, 14) 100%)
+                            `,
                             borderRadius: '50%',
                             width: 60,
                             height: 60,
@@ -467,6 +553,13 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                             alignItems: 'center',
                             justifyContent: 'center',
                             position: 'relative',
+                            // boxShadow: `
+                            //     0 4px 8px rgba(219, 0, 17, 0.4),
+                            //     0 2px 4px rgba(0,0,0,0.3),
+                            //     inset 0 1px 0 rgba(255,255,255,0.3),
+                            //     inset 0 -1px 0 rgba(0,0,0,0.2)
+                            // `,
+                            border: '1px solid rgba(150, 0, 12, 0.8)',
                         }}
                     >
                         {(() => {
@@ -583,6 +676,8 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                     {data.status === 'standby' && <FaCircle className="text-white/80 w-3.5 h-3.5" />}
                 </div>
             </div>
+
+
             <div className="text-[10px] text-black mt-1 max-w-[80px] text-center font-medium">{data.fullName}</div>
             <div className="flex gap-1 mt-1">
                 <button
@@ -637,118 +732,6 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                     Reset
                 </button>
             </div>
-            {/* New row of tab buttons with icons and tooltips */}
-            <div className="flex gap-1 mt-1 justify-center" style={{ width: 120 }}>
-                <div className="relative group">
-                    <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
-                        style={{
-                            width: 26,
-                            height: 26,
-                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
-                        }}
-                        onClick={e => {
-                            e.stopPropagation();
-                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
-                            setSelectedTab('histogram');
-                        }}
-                        onMouseEnter={() => setHoveredTab('histogram')}
-                        onMouseLeave={() => setHoveredTab(null)}
-                    >
-                        <FaChartBar size={14} />
-                    </button>
-                    {hoveredTab === 'histogram' && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            Histogram
-                        </div>
-                    )}
-                </div>
-                <div className="relative group">
-                    <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
-                        style={{
-                            width: 26,
-                            height: 26,
-                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
-                        }}
-                        onClick={e => {
-                            e.stopPropagation();
-                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
-                            setSelectedTab('data');
-                        }}
-                        onMouseEnter={() => setHoveredTab('data')}
-                        onMouseLeave={() => setHoveredTab(null)}
-                    >
-                        <FaTable size={14} />
-                    </button>
-                    {hoveredTab === 'data' && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            Data Output
-                        </div>
-                    )}
-                </div>
-                <div className="relative group">
-                    <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
-                        style={{
-                            width: 26,
-                            height: 26,
-                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
-                        }}
-                        onClick={e => {
-                            e.stopPropagation();
-                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
-                            setSelectedTab('log');
-                        }}
-                        onMouseEnter={() => setHoveredTab('log')}
-                        onMouseLeave={() => setHoveredTab(null)}
-                    >
-                        <FaFileAlt size={14} />
-                    </button>
-                    {hoveredTab === 'log' && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            Log
-                        </div>
-                    )}
-                </div>
-                <div className="relative group">
-                    <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
-                        style={{
-                            width: 26,
-                            height: 26,
-                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
-                        }}
-                        onClick={e => {
-                            e.stopPropagation();
-                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
-                            setSelectedTab('fail');
-                        }}
-                        onMouseEnter={() => setHoveredTab('fail')}
-                        onMouseLeave={() => setHoveredTab(null)}
-                    >
-                        <FaExclamationTriangle size={14} />
-                    </button>
-                    {hoveredTab === 'fail' && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            Fail Message
-                        </div>
-                    )}
-                </div>
-            </div>
-            <Handle
-                type="source"
-                position={Position.Right}
-                style={{
-                    background: '#10b981',
-                    border: '2px solid #ffffff',
-                    width: '12px',
-                    height: '12px',
-                    cursor: 'pointer',
-                    borderRadius: '50%'
-                }}
-                id={`${id}-source`}
-            />
         </div>
     );
 });
@@ -938,15 +921,33 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 : node
         ));
 
-        // Update edge colors based on source node status
+        // Update edge colors and labels based on source node status
         setEdges(eds => eds.map(edge => {
             if (edge.source === nodeId) {
+                const sourceOutput = nodeOutputs && nodeOutputs[nodeId];
+                const rowCount = sourceOutput?.calculation_results?.table?.length;
+
                 return {
                     ...edge,
                     style: {
                         ...edge.style,
                         stroke: status === 'completed' ? '#22c55e' : '#1e293b'
-                    }
+                    },
+                    label: status === 'completed' && rowCount && rowCount > 0 ?
+                        rowCount.toLocaleString() : undefined,
+                    labelStyle: {
+                        fill: '#1f2937',
+                        fontWeight: 'bold',
+                        fontSize: '10px'
+                    },
+                    labelBgStyle: {
+                        fill: '#ffffff',
+                        fillOpacity: 0.9,
+                        stroke: '#d1d5db',
+                        strokeWidth: 1
+                    },
+                    labelBgPadding: [4, 8],
+                    labelBgBorderRadius: 4
                 };
             }
             return edge;
@@ -1053,7 +1054,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             {Object.entries(runParams).map(([key, value]) => (
                 <div key={key} className="flex flex-col">
                     <label className="text-sm font-bold text-black mb-1">
-                        {key}
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
                         {invalidFields.has(key) && (
                             <span className="text-red-500 ml-1">*</span>
                         )}
@@ -1082,7 +1083,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                     setInvalidFields(newInvalidFields);
                                 }
                             }}
-                            placeholder={`Enter ${key.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
+                            placeholder={`Enter ${(key.charAt(0).toUpperCase() + key.slice(1)).replace(/([A-Z])/g, ' $1')}`}
                         />
                     )}
                     {invalidFields.has(key) && (
@@ -1329,21 +1330,9 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             }
         })));
 
-        // Update selected node with output data
-        if (selectedNodesArr.length > 0) {
-            const selectedId = selectedNodesArr[0].id;
-            const output = nodeOutputs[selectedId];
-            setSelectedNode({
-                ...selectedNodesArr[0],
-                data: {
-                    ...selectedNodesArr[0].data,
-                    output
-                }
-            });
-        } else {
-            setSelectedNode(null);
-        }
-    }, [setNodes, nodeOutputs]);
+        // Do not set selectedNode/output here
+        setSelectedNode(null);
+    }, [setNodes]);
 
     // Refactored runNodeWithDependencies to pass previousOutputs down the chain
     async function runNodeWithDependencies(
@@ -1508,7 +1497,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             });
         }
 
-        // Reset edge colors for all affected edges
+        // Reset edge colors and labels for all affected edges
         setEdges(eds => eds.map(edge => {
             if (toReset.includes(edge.source)) {
                 return {
@@ -1516,7 +1505,10 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     style: {
                         ...edge.style,
                         stroke: '#1e293b'
-                    }
+                    },
+                    label: undefined, // Clear the data count label
+                    labelStyle: undefined,
+                    labelBgStyle: undefined
                 };
             }
             return edge;
@@ -1533,6 +1525,35 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             }
         })));
     }, [areParamsApplied, setNodes]);
+
+    // Update edge labels when nodeOutputs change
+    useEffect(() => {
+        setEdges(eds => eds.map(edge => {
+            const sourceOutput = nodeOutputs && nodeOutputs[edge.source];
+            const rowCount = sourceOutput?.calculation_results?.table?.length;
+            const sourceNode = nodes.find(n => n.id === edge.source);
+            const sourceStatus = sourceNode?.data?.status;
+
+            return {
+                ...edge,
+                label: sourceStatus === 'completed' && rowCount && rowCount > 0 ?
+                    rowCount.toLocaleString() : undefined,
+                labelStyle: {
+                    fill: '#1f2937',
+                    fontWeight: 'bold',
+                    fontSize: '10px'
+                },
+                labelBgStyle: {
+                    fill: '#ffffff',
+                    fillOpacity: 0.9,
+                    stroke: '#d1d5db',
+                    strokeWidth: 1
+                },
+                labelBgPadding: [4, 8],
+                labelBgBorderRadius: 4
+            };
+        }));
+    }, [nodeOutputs, nodes, setEdges]);
 
     // Define nodeTypes with the required props
     const [selectedTab, setSelectedTab] = useState<string>('data');
@@ -1589,22 +1610,66 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
         <HandlerContext.Provider value={{ runNode, resetNodeAndDownstream }}>
             <div className="min-h-screen" style={{ backgroundColor: 'white' }}>
                 {/* Main Content */}
-                <div className="flex flex-col h-screen">
+                <div
+                    className="flex flex-col h-screen transition-all duration-300 ease-in-out"
+                    style={{
+                        marginRight: isSidebarOpen ? `${sidebarWidth}px` : '48px'
+                    }}
+                >
                     {/* Flow Container */}
-                    <div className="flex-1 overflow-hidden">
-                        <div className="bg-[#F5F5F5] border-b border-slate-200 p-4">
-                            <div className="flex justify-center">
-                                <h1 className="text-2xl font-semibold text-black">
-                                    Generic Completeness Control
-                                </h1>
+                    <div
+                        className="flex-1 overflow-hidden flex flex-col"
+                        style={{
+                            height: isBottomBarOpen
+                                ? `calc(100vh - ${bottomBarHeight}px)`
+                                : 'calc(100vh - 48px)'
+                        }}
+                    >
+                        <div
+                            className="border-b border-slate-200 px-8 py-4"
+                            style={{
+                                backgroundColor: 'white',
+                                minHeight: '66px', // Increased header height
+                                boxShadow: `
+                                    0 4px 8px rgba(0,0,0,0.15),
+                                    0 8px 16px rgba(0,0,0,0.1),
+                                    0 2px 4px rgba(0,0,0,0.1),
+                                    inset 0 2px 0 rgba(255,255,255,0.8),
+                                    inset 0 -2px 0 rgba(0,0,0,0.1)
+                                `
+                            }}
+                        >
+                            <div className="flex items-center justify-between">
+                                {/* HSBC Logo and Name - Left */}
+                                <div className="flex items-center flex-shrink-0">
+                                    <img src="/hsbc.png" alt="HSBC Logo" className="h-16 w-auto mr-4" />
+                                    <span className="text-black font-bold text-2xl">HSBC</span>
+                                </div>
+
+                                {/* Professional Title - Center */}
+                                <div className="flex-1 flex justify-center">
+                                    <h1 className="text-2xl font-bold text-black">
+                                        GENERIC COMPLETENESS CONTROL
+                                    </h1>
+                                </div>
+
+                                {/* Right spacer for balance */}
+                                <div className="flex-shrink-0 w-24"></div>
                             </div>
                         </div>
                         <div
-                            className="bg-white"
+                            className="relative h-full"
                             style={{
-                                height: isBottomBarOpen
-                                    ? `calc(100vh - 180px - ${bottomBarHeight}px)`
-                                    : `calc(100vh - 180px - 48px)`
+                                background: 'white',
+                                boxShadow: `
+                                    inset 0 4px 8px rgba(0,0,0,0.08),
+                                    inset 0 2px 4px rgba(0,0,0,0.05),
+                                    inset 0 8px 16px rgba(0,0,0,0.02),
+                                    inset 0 -2px 4px rgba(255,255,255,0.9),
+                                    0 1px 0 rgba(255,255,255,0.95)
+                                `,
+                                border: '24px solid #f5f5f5',
+                                borderRadius: '8px'
                             }}
                             onClick={() => setActivePanel(null)}
                         >
@@ -1627,11 +1692,12 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 selectNodesOnDrag={false}
                                 onSelectionChange={onSelectionChange}
                                 multiSelectionKeyCode="Control"
+                                proOptions={{ hideAttribution: true }}
                             >
                                 <Background
-                                    color="#e5e7eb"
+                                    color="#f3f4f6"
                                     gap={20}
-                                    className="bg-transparent"
+                                    className="bg-white"
                                 />
                                 <Controls className="bg-slate-800 border border-slate-700/50 rounded-lg" />
                             </ReactFlow>
@@ -1641,7 +1707,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     {/* Bottom Data View Bar with Resize Handle */}
                     <div
                         className={`
-                            relative bg-[#F5F5F5] border-t border-slate-200
+                            relative bg-white border-t border-slate-200
                             transition-all duration-300 ease-in-out
                             ${!isBottomBarOpen ? 'h-12' : ''}
                         `}
@@ -1650,9 +1716,9 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             minHeight: isBottomBarOpen ? `${minHeight}px` : '48px',
                             maxHeight: isBottomBarOpen ? `${maxHeight}px` : '48px',
                             transition: isResizingBottom ? 'none' : undefined,
-                            zIndex: activePanel === 'bottombar' ? 50 : 10
+                            zIndex: activePanel === 'bottombar' ? 50 : 10,
+
                         }}
-                        onDoubleClick={() => !isResizingBottom && setIsBottomBarOpen(!isBottomBarOpen)}
                         onClick={() => setActivePanel('bottombar')}
                     >
                         {/* Resize Handle - only show when open */}
@@ -1675,15 +1741,20 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         )}
 
                         {/* Header Bar */}
-                        <div className={`
-                            flex items-center h-12 px-4 border-b border-slate-700/50
-                            ${isBottomBarOpen ? 'justify-between' : 'justify-center'}
-                        `}>
-                            {isBottomBarOpen && (
-                                <span className="text-black font-medium">
-                                    Data View
-                                </span>
-                            )}
+                        <div className="flex items-center justify-between h-12 px-4 border-b border-slate-700/50">
+                            {/* DataView Button - Left */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsBottomBarOpen(!isBottomBarOpen);
+                                }}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm font-medium transition-colors"
+                            >
+                                <FaTable className="w-3 h-3" />
+                                DataView
+                            </button>
+
+                            {/* Chevron Icon - Right */}
                             <FaChevronUp
                                 className={`
                                     text-slate-700/70 cursor-pointer transition-transform duration-300 hover:text-slate-600
@@ -1698,7 +1769,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
                         {/* Content - only show when open */}
                         {isBottomBarOpen && (
-                            <div className="h-[calc(100%-3rem)] px-4 overflow-y-auto">
+                            <div className="h-[calc(100%-48px)] px-4 overflow-y-auto">
                                 {selectedNode ? (
                                     <div className="flex-1 text-sm text-slate-300 h-full overflow-hidden">
                                         {/* Tab Buttons */}
@@ -1752,11 +1823,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                             <div
                                                                 className="ag-theme-alpine border border-gray-300 rounded bg-white"
                                                                 style={{
-                                                                    height: `${bottomBarHeight - 168}px`, // Dynamic height - space for header, tabs and padding
+                                                                    height: `${bottomBarHeight - 140}px`, // Dynamic height - space for header, tabs and padding
                                                                     overflow: 'auto'
                                                                 }}
                                                             >
-                                                                <div className="p-3">
+                                                                <div className="p-0">
                                                                     {(() => {
                                                                         const filteredHeaders = selectedNode.data.output.calculation_results.headers.filter((header: string) => {
                                                                             if (!histogramFilterValue) return true;
@@ -1823,7 +1894,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                                         });
                                                                         return obj;
                                                                     })}
-                                                                    height={bottomBarHeight - 160}
+                                                                    height={bottomBarHeight - 120}
                                                                 />
                                                             </div>
                                                         </div>
@@ -1832,7 +1903,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                             <h3 className="text-emerald-400 font-medium mb-2">Calculation Results:</h3>
                                                             <div
                                                                 className="bg-slate-900/50 rounded p-2 overflow-y-auto"
-                                                                style={{ height: `${bottomBarHeight - 128}px` }}
+                                                                style={{ height: `${bottomBarHeight - 100}px` }}
                                                             >
                                                                 <pre className="text-slate-300 whitespace-pre-wrap">
                                                                     {JSON.stringify(selectedNode.data.output.calculation_results, null, 2)}
@@ -1850,7 +1921,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                             <h3 className="text-emerald-400 font-medium mb-2">Execution Logs:</h3>
                                                             <div
                                                                 className="bg-slate-900/50 rounded p-2 space-y-1 overflow-y-auto"
-                                                                style={{ height: `${bottomBarHeight - 128}px` }}
+                                                                style={{ height: `${bottomBarHeight - 100}px` }}
                                                             >
                                                                 {selectedNode.data.output.execution_logs.map((log: string, index: number) => (
                                                                     <div key={index} className="text-slate-300">
@@ -1868,7 +1939,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                     {selectedNode.data.status === 'failed' && selectedNode.data.output?.fail_message ? (
                                                         <div
                                                             className="bg-red-900/50 rounded p-2 text-red-300 overflow-y-auto"
-                                                            style={{ height: `${bottomBarHeight - 128}px` }}
+                                                            style={{ height: `${bottomBarHeight - 100}px` }}
                                                         >
                                                             {selectedNode.data.output.fail_message}
                                                         </div>
@@ -1887,20 +1958,17 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             </div>
                         )}
 
-                        {/* Collapsed state indicator */}
-                        {!isBottomBarOpen && (
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-black">
-                                Data View
-                            </div>
-                        )}
+                        {/* Collapsed state indicator - removed since we now have the button */}
                     </div>
                 </div>
+
+
 
                 {/* Right Sidebar */}
                 <div
                     ref={resizeRef}
                     className={`
-                        fixed right-0 top-0 h-full bg-[#F5F5F5] border-l border-slate-200
+                        fixed right-0 top-0 h-full bg-white border-l border-slate-200
                     transition-all duration-300 ease-in-out
                     ${!isSidebarOpen ? 'w-12' : ''}
                 `}
@@ -1944,19 +2012,21 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                     />
 
                     <div className={`
-                        flex items-center h-16 px-4 border-b border-slate-700/50
-                    ${isSidebarOpen ? 'justify-between' : 'justify-center'}
-                `}>
+                        flex items-center h-16 px-0 border-b border-slate-700/50
+                        ${isSidebarOpen ? 'justify-between' : 'justify-center'}
+                    `}>
                         {isSidebarOpen && (
-                            <span className="text-black font-medium">
-                                Run Parameters
-                            </span>
+                            <div className="flex-1 flex justify-center">
+                                <span className="text-black font-medium">
+                                    Run Parameters
+                                </span>
+                            </div>
                         )}
                         <FaChevronLeft
                             className={`
                                 text-slate-700/70 cursor-pointer transition-transform duration-300 hover:text-slate-600
-                            ${isSidebarOpen ? '' : 'rotate-180'}
-                        `}
+                                ${isSidebarOpen ? '' : 'rotate-180'}
+                            `}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setIsSidebarOpen(!isSidebarOpen);
@@ -1966,15 +2036,15 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
 
                     {/* Sidebar Content */}
                     {isSidebarOpen && (
-                        <div className="p-6 text-slate-300 overflow-y-auto max-h-[calc(100vh-4rem)]">
-                            <div className="space-y-6">
+                        <div className="px-2 py-2 text-slate-300 overflow-y-auto max-h-[calc(100vh-4rem)]">
+                            <div className="space-y-4">
                                 {/* Form fields with updated styling */}
                                 <div className="space-y-4">
                                     {renderParameterInputs()}
                                 </div>
 
                                 {/* Buttons Container */}
-                                <div className="pt-6 flex gap-4">
+                                <div className="pt-4 flex gap-4">
                                     <button
                                         onClick={handleApplyParams}
                                         className={`flex-1 px-4 py-3 bg-green-800 hover:bg-green-700 text-white rounded-lg text-sm 
