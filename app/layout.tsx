@@ -8,12 +8,13 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/hsbc.png',
+        url: '/favicon.svg',
         sizes: 'any',
+        type: 'image/svg+xml',
       },
     ],
-    shortcut: '/hsbc.png',
-    apple: '/hsbc.png',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 };
 
@@ -25,9 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" type="image/png" href="/hsbc.png" />
-        <link rel="shortcut icon" href="/hsbc.png" />
-        <link rel="apple-touch-icon" href="/hsbc.png" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.svg" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
       </head>
       <body>
         {children}

@@ -52,6 +52,18 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
     // Applied column filters
     const [columnFilters, setColumnFilters] = useState<{ [key: string]: Set<string> }>({});
 
+    // Add state for showing the active filters dropdown
+    const [showActiveFiltersDropdown, setShowActiveFiltersDropdown] = useState(false);
+
+    // Handler to remove a single filter
+    const removeFilter = (column: string) => {
+        setColumnFilters(prev => {
+            const newFilters = { ...prev };
+            delete newFilters[column];
+            return newFilters;
+        });
+    };
+
     // Calculate pagination with applied filters
     const getFilteredData = () => {
         let filtered = rowData;
@@ -692,7 +704,7 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                         )}
                     </div>
 
-                    {/* Clear All Filters Button */}
+                    {/* Clear All Filters Button with Dropdown for Active Filters */}
                     {Object.keys(columnFilters).length > 0 && (
                         <div style={{
                             display: 'flex',
@@ -701,10 +713,14 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                             padding: '4px',
                             backgroundColor: '#1e293b',
                             borderRadius: '6px',
-                            border: '1px solid #475569'
+                            border: '1px solid #475569',
+                            position: 'relative'
                         }}>
-                            <span style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                                Active Filters:
+                            <span
+                                style={{ fontSize: '11px', color: '#94a3b8', whiteSpace: 'nowrap', cursor: 'pointer', userSelect: 'none' }}
+                                onClick={() => setShowActiveFiltersDropdown(v => !v)}
+                            >
+                                Active Filters: <span style={{ fontSize: '13px', marginLeft: '2px' }}>▼</span>
                             </span>
                             <button
                                 onClick={clearAllColumnFilters}
@@ -720,6 +736,52 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                             >
                                 Clear All ({Object.keys(columnFilters).length})
                             </button>
+                            {/* Dropdown for active filters */}
+                            {showActiveFiltersDropdown && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '110%',
+                                    right: 0,
+                                    backgroundColor: '#1e293b',
+                                    border: '1px solid #475569',
+                                    borderRadius: '6px',
+                                    zIndex: 1000,
+                                    minWidth: '180px',
+                                    boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+                                    padding: '8px 0',
+                                }}>
+                                    {Object.keys(columnFilters).map(col => (
+                                        <div key={col} style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '4px 16px',
+                                            fontSize: '11px',
+                                            color: '#e2e8f0',
+                                            borderBottom: '1px solid #334155',
+                                            gap: '8px'
+                                        }}>
+                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100px' }}>{col}</span>
+                                            <button
+                                                onClick={() => removeFilter(col)}
+                                                style={{
+                                                    backgroundColor: '#ef4444',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '3px',
+                                                    cursor: 'pointer',
+                                                    fontSize: '10px',
+                                                    padding: '2px 7px',
+                                                    marginLeft: '8px'
+                                                }}
+                                                title={`Remove filter for ${col}`}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -996,11 +1058,11 @@ const AgGridTable: React.FC<AgGridTableProps> = ({
                         border: '1px solid #475569',
                         borderRadius: '8px',
                         width: '320px',
-                        maxHeight: '500px',
+                        maxHeight: '60vh', // Responsive height
+                        overflowY: 'auto', // Scroll if too tall
                         display: 'flex',
                         flexDirection: 'column',
-                        zIndex: 9999,
-                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5)'
+                        zIndex: 2000
                     }}
                 >
                     {/* Header */}
