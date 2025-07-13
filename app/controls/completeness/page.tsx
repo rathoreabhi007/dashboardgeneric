@@ -377,24 +377,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
     const { runNode, resetNodeAndDownstream } = useContext(HandlerContext) as HandlerContextType;
     const [isHovered, setIsHovered] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
+    const [showSourceTooltip, setShowSourceTooltip] = useState(false);
+    const [isOutputHovered, setIsOutputHovered] = useState(false); // <-- add this line
     const isRunning = data.status === 'running';
     const canReset = data.status === 'failed' || data.status === 'completed' || data.status === 'stopped';
     const isSelected = data.selected || false;
     const canRun = data.areParamsApplied && !isRunning;
-    const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-
-    const handleClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        // When a node is clicked, set it as selected with its output (default to empty object if missing)
-        const output = (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {};
-        setSelectedNode({
-            id,
-            data: {
-                ...data,
-                output
-            }
-        });
-    };
 
     // Base node style
     const baseStyle = {
@@ -430,7 +418,6 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 setIsHovered(false);
                 setShowTooltip(false);
             }}
-            onClick={handleClick}
         >
             <div
                 className="relative"
@@ -487,6 +474,56 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                     }}
                     id={`${id}-source`}
                 />
+                {/* Output handle for viewing data */}
+                <div
+                    style={{
+                        background: '#22c55e',
+                        border: `2px solid ${isOutputHovered ? '#000000' : '#d1d5db'}`,
+                        width: '16px',
+                        height: '16px',
+                        cursor: 'pointer',
+                        borderRadius: '50%',
+                        top: '50%',
+                        right: '-24px',
+                        transform: 'translateY(-50%)',
+                        position: 'absolute',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        zIndex: 10
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        // Set the selected node with its output data
+                        const output = (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {};
+                        setSelectedNode({
+                            id,
+                            data: {
+                                ...data,
+                                output
+                            }
+                        });
+                        // Set the default tab to 'data' for data output
+                        setSelectedTab('data');
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.2)';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                        setShowSourceTooltip(true);
+                        setIsOutputHovered(true); // <-- add this line
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                        setShowSourceTooltip(false);
+                        setIsOutputHovered(false); // <-- add this line
+                    }}
+                />
+                {showSourceTooltip && (
+                    <div className="absolute top-1/2 right-[-90px] transform -translate-y-1/2 px-2 py-1 text-[10px] 
+                        bg-slate-900 text-white rounded whitespace-nowrap z-50">
+                        Click to view data
+                    </div>
+                )}
                 <div
                     style={{
                         border: '4px solid white',    // Middle thick white border
@@ -694,105 +731,6 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                     <FaUndo className="w-1.5 h-1.5" />
                     Reset
                 </button>
-            </div>
-            {/* New row of tab buttons with icons and tooltips */}
-            <div className="flex gap-1 mt-1 justify-center" style={{ width: 120 }}>
-                <div className="relative group">
-                    <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
-                        style={{
-                            width: 26,
-                            height: 26,
-                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
-                        }}
-                        onClick={e => {
-                            e.stopPropagation();
-                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
-                            setSelectedTab('histogram');
-                        }}
-                        onMouseEnter={() => setHoveredTab('histogram')}
-                        onMouseLeave={() => setHoveredTab(null)}
-                    >
-                        <FaChartBar size={14} />
-                    </button>
-                    {hoveredTab === 'histogram' && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            Histogram
-                        </div>
-                    )}
-                </div>
-                <div className="relative group">
-                    <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
-                        style={{
-                            width: 26,
-                            height: 26,
-                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
-                        }}
-                        onClick={e => {
-                            e.stopPropagation();
-                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
-                            setSelectedTab('data');
-                        }}
-                        onMouseEnter={() => setHoveredTab('data')}
-                        onMouseLeave={() => setHoveredTab(null)}
-                    >
-                        <FaTable size={14} />
-                    </button>
-                    {hoveredTab === 'data' && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            Data Output
-                        </div>
-                    )}
-                </div>
-                <div className="relative group">
-                    <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
-                        style={{
-                            width: 26,
-                            height: 26,
-                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
-                        }}
-                        onClick={e => {
-                            e.stopPropagation();
-                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
-                            setSelectedTab('log');
-                        }}
-                        onMouseEnter={() => setHoveredTab('log')}
-                        onMouseLeave={() => setHoveredTab(null)}
-                    >
-                        <FaFileAlt size={14} />
-                    </button>
-                    {hoveredTab === 'log' && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            Log
-                        </div>
-                    )}
-                </div>
-                <div className="relative group">
-                    <button
-                        className="flex items-center justify-center px-2 py-1 rounded bg-slate-700 hover:bg-slate-600"
-                        style={{
-                            width: 26,
-                            height: 26,
-                            color: '#22c55e' // Using direct CSS color to avoid Tailwind conflicts
-                        }}
-                        onClick={e => {
-                            e.stopPropagation();
-                            setSelectedNode({ id, data: { ...data, output: (nodeOutputs && nodeOutputs[id]) ? nodeOutputs[id] : {} } });
-                            setSelectedTab('fail');
-                        }}
-                        onMouseEnter={() => setHoveredTab('fail')}
-                        onMouseLeave={() => setHoveredTab(null)}
-                    >
-                        <FaExclamationTriangle size={14} />
-                    </button>
-                    {hoveredTab === 'fail' && (
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 text-[10px] bg-slate-900 text-white rounded whitespace-nowrap z-50">
-                            Fail Message
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );
@@ -1392,21 +1330,9 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
             }
         })));
 
-        // Update selected node with output data
-        if (selectedNodesArr.length > 0) {
-            const selectedId = selectedNodesArr[0].id;
-            const output = nodeOutputs[selectedId];
-            setSelectedNode({
-                ...selectedNodesArr[0],
-                data: {
-                    ...selectedNodesArr[0].data,
-                    output
-                }
-            });
-        } else {
-            setSelectedNode(null);
-        }
-    }, [setNodes, nodeOutputs]);
+        // Do not set selectedNode/output here
+        setSelectedNode(null);
+    }, [setNodes]);
 
     // Refactored runNodeWithDependencies to pass previousOutputs down the chain
     async function runNodeWithDependencies(
@@ -1700,9 +1626,10 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         }}
                     >
                         <div
-                            className="border-b border-slate-200 px-2 py-1"
+                            className="border-b border-slate-200 px-8 py-4"
                             style={{
                                 backgroundColor: 'white',
+                                minHeight: '66px', // Increased header height
                                 boxShadow: `
                                     0 4px 8px rgba(0,0,0,0.15),
                                     0 8px 16px rgba(0,0,0,0.1),
@@ -1715,8 +1642,8 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                             <div className="flex items-center justify-between">
                                 {/* HSBC Logo and Name - Left */}
                                 <div className="flex items-center flex-shrink-0">
-                                    <img src="/hsbc.png" alt="HSBC Logo" className="h-12 w-auto mr-2" />
-                                    <span className="text-black font-semibold text-lg">HSBC</span>
+                                    <img src="/hsbc.png" alt="HSBC Logo" className="h-16 w-auto mr-4" />
+                                    <span className="text-black font-bold text-2xl">HSBC</span>
                                 </div>
 
                                 {/* Professional Title - Center */}
@@ -1727,7 +1654,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 </div>
 
                                 {/* Right spacer for balance */}
-                                <div className="flex-shrink-0 w-20"></div>
+                                <div className="flex-shrink-0 w-24"></div>
                             </div>
                         </div>
                         <div
