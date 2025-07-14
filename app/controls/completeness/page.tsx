@@ -476,6 +476,7 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 />
                 {/* Output handle for viewing data */}
                 <div
+                    className={"absolute"}
                     style={{
                         background: '#22c55e',
                         border: `2px solid ${isOutputHovered ? '#000000' : '#d1d5db'}`,
@@ -485,10 +486,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                         borderRadius: '50%',
                         top: '50%',
                         right: '-24px',
-                        transform: 'translateY(-50%)',
+                        transform: `translateY(-50%) scale(${isOutputHovered ? 1.2 : 1})`,
                         position: 'absolute',
                         transition: 'all 0.2s ease',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        boxShadow: isOutputHovered
+                            ? '0 4px 8px rgba(0,0,0,0.3)'
+                            : '0 2px 4px rgba(0,0,0,0.2)',
                         zIndex: 10
                     }}
                     onClick={(e) => {
@@ -505,17 +508,13 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                         // Set the default tab to 'data' for data output
                         setSelectedTab('data');
                     }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-50%) scale(1.2)';
-                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+                    onMouseEnter={() => {
                         setShowSourceTooltip(true);
-                        setIsOutputHovered(true); // <-- add this line
+                        setIsOutputHovered(true);
                     }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    onMouseLeave={() => {
                         setShowSourceTooltip(false);
-                        setIsOutputHovered(false); // <-- add this line
+                        setIsOutputHovered(false);
                     }}
                 />
                 {showSourceTooltip && (
@@ -1626,10 +1625,12 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                         }}
                     >
                         <div
-                            className="border-b border-slate-200 px-8 py-4"
+                            className="border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4"
                             style={{
                                 backgroundColor: 'white',
-                                minHeight: '66px', // Increased header height
+                                minHeight: '4vh', // Responsive header height (4% of viewport height)
+                                maxHeight: '8vh', // Maximum height to prevent it from getting too large
+                                height: 'auto',
                                 boxShadow: `
                                     0 4px 8px rgba(0,0,0,0.15),
                                     0 8px 16px rgba(0,0,0,0.1),
@@ -1639,22 +1640,27 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                 `
                             }}
                         >
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between h-full">
                                 {/* HSBC Logo and Name - Left */}
                                 <div className="flex items-center flex-shrink-0">
-                                    <img src="/hsbc.png" alt="HSBC Logo" className="h-16 w-auto mr-4" />
-                                    <span className="text-black font-bold text-2xl">HSBC</span>
+                                    <img
+                                        src="/hsbc.png"
+                                        alt="HSBC Logo"
+                                        className="h-8 sm:h-12 lg:h-16 w-auto mr-2 sm:mr-3 lg:mr-4"
+                                        style={{ maxHeight: '6vh' }}
+                                    />
+                                    <span className="text-black font-bold text-lg sm:text-xl lg:text-2xl">HSBC</span>
                                 </div>
 
                                 {/* Professional Title - Center */}
                                 <div className="flex-1 flex justify-center">
-                                    <h1 className="text-2xl font-bold text-black">
+                                    <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-black text-center">
                                         GENERIC COMPLETENESS CONTROL
                                     </h1>
                                 </div>
 
                                 {/* Right spacer for balance */}
-                                <div className="flex-shrink-0 w-24"></div>
+                                <div className="flex-shrink-0 w-16 sm:w-20 lg:w-24"></div>
                             </div>
                         </div>
                         <div
