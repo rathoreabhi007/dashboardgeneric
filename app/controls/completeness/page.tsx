@@ -476,23 +476,26 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 />
                 {/* Output handle for viewing data */}
                 <div
-                    className={"absolute"}
+                    className={`
+                        absolute cursor-pointer rounded-full transition-all duration-200 ease-in-out
+                        ${isOutputHovered
+                            ? 'border-2 border-black scale-110 shadow-lg'
+                            : 'border-2 border-gray-300 scale-100 shadow-md'
+                        }
+                        hover:border-black hover:scale-110 hover:shadow-lg
+                        bg-green-500
+                    `}
                     style={{
-                        background: '#22c55e',
-                        border: `2px solid ${isOutputHovered ? '#000000' : '#d1d5db'}`,
                         width: '16px',
                         height: '16px',
-                        cursor: 'pointer',
-                        borderRadius: '50%',
                         top: '50%',
                         right: '-24px',
-                        transform: `translateY(-50%) scale(${isOutputHovered ? 1.2 : 1})`,
-                        position: 'absolute',
-                        transition: 'all 0.2s ease',
-                        boxShadow: isOutputHovered
-                            ? '0 4px 8px rgba(0,0,0,0.3)'
-                            : '0 2px 4px rgba(0,0,0,0.2)',
-                        zIndex: 10
+                        transform: 'translateY(-50%)',
+                        zIndex: 10,
+                        // Fallback inline styles for maximum compatibility
+                        backgroundColor: '#22c55e',
+                        borderWidth: '2px',
+                        borderStyle: 'solid'
                     }}
                     onClick={(e) => {
                         e.stopPropagation();
