@@ -367,12 +367,14 @@ type LocalRunParameters = {
 };
 
 // Define the CustomNode component outside the main component
-const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTab }: {
+const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTab, setIsBottomBarOpen, setActivePanel }: {
     data: any;
     id: string;
     nodeOutputs: { [key: string]: any };
     setSelectedNode: (node: any) => void;
     setSelectedTab: (tab: string) => void;
+    setIsBottomBarOpen: (open: boolean) => void;
+    setActivePanel: (panel: 'sidebar' | 'bottombar' | null) => void;
 }) => {
     const { runNode, resetNodeAndDownstream } = useContext(HandlerContext) as HandlerContextType;
     const [isHovered, setIsHovered] = useState(false);
@@ -476,14 +478,12 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                 />
                 {/* Output handle for viewing data */}
                 <div
-                    className={`
-                        absolute cursor-pointer rounded-full transition-all duration-200 ease-in-out
+                    className={`absolute cursor-pointer rounded-full transition-all duration-200 ease-in-out
                         ${isOutputHovered
                             ? 'border-2 border-black scale-110 shadow-lg'
                             : 'border-2 border-gray-300 scale-100 shadow-md'
                         }
                         hover:border-black hover:scale-110 hover:shadow-lg
-                        bg-green-500
                     `}
                     style={{
                         width: '16px',
@@ -492,10 +492,10 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                         right: '-24px',
                         transform: 'translateY(-50%)',
                         zIndex: 10,
-                        // Fallback inline styles for maximum compatibility
-                        backgroundColor: '#22c55e',
-                        borderWidth: '2px',
-                        borderStyle: 'solid'
+                        backgroundColor: data.status === 'completed' ? '#22c55e' : '#a3a3a3',
+                        borderWidth: '4px',
+                        borderStyle: 'solid',
+                        borderColor: isOutputHovered ? '#000000' : '#d1d5db', // black on hover, gray otherwise
                     }}
                     onClick={(e) => {
                         e.stopPropagation();
@@ -510,6 +510,9 @@ const CustomNode = memo(({ data, id, nodeOutputs, setSelectedNode, setSelectedTa
                         });
                         // Set the default tab to 'data' for data output
                         setSelectedTab('data');
+                        // Open the DataView (bottom bar)
+                        setIsBottomBarOpen(true);
+                        setActivePanel('bottombar');
                     }}
                     onMouseEnter={() => {
                         setShowSourceTooltip(true);
@@ -1566,9 +1569,11 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                 nodeOutputs={nodeOutputs}
                 setSelectedNode={setSelectedNode}
                 setSelectedTab={setSelectedTab}
+                setIsBottomBarOpen={setIsBottomBarOpen}
+                setActivePanel={setActivePanel}
             />
         )
-    }), [nodeOutputs, setSelectedNode, setSelectedTab]);
+    }), [nodeOutputs, setSelectedNode, setSelectedTab, setIsBottomBarOpen, setActivePanel]);
 
     // Persist nodes to localStorage whenever they change
     useEffect(() => {
@@ -1919,7 +1924,7 @@ export default function CompletenessControl({ instanceId }: { instanceId?: strin
                                                                 </pre>
                                                             </div>
                                                         </div>
-                                                    ) : 'No data output.'}
+                                                    ) : 'No data output. Please run the Node to see data.'}
                                                 </div>
                                             )}
                                             {selectedTab === 'log' && (
